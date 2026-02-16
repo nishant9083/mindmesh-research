@@ -368,7 +368,7 @@ function NewsItemRow({ news, onClick }: { news: NewsItem; onClick?: () => void }
                     </div>
                     <div className="flex items-center gap-2 mt-1">
                         {news.authors && (
-                            <span className="text-xs text-gray-500 truncate max-w-[140px]">
+                            <span className="text-xs text-gray-500 truncate max-w-35">
                                 {news.authors}
                             </span>
                         )}

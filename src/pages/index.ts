@@ -7,6 +7,4 @@
  * - Layout wrappers for pages
  */
 
-// Export pages here as they are created
-// Example: export { HomePage } from "./HomePage";
-// Example: export { SettingsPage } from "./SettingsPage";
+export { Dashboard } from "./Dashboard"
