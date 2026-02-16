@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle, CardAction } from "@/components/ui/card"
-import { ExternalLink, Settings, Maximize2 } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { ExternalLink} from "lucide-react"
 
 interface PlaceholderCardProps {
   title: string
