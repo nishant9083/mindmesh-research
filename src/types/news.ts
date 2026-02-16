@@ -69,3 +69,33 @@ export interface NewsQueryParams {
   toDate?: string
   search?: string
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Component Props
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Props for the NewsCard component
+ */
+export interface NewsCardProps {
+  onNewsClick?: (news: NewsItem) => void
+}
+
+/**
+ * Filter state for news filtering
+ */
+export interface FilterState {
+  search: string
+  sourceIds: number[]
+  categories: string[]
+}
+
+/**
+ * Props for MultiSelectDropdown component
+ */
+export interface MultiSelectDropdownProps<T extends string | number> {
+  label: string
+  options: { id: T; label: string }[]
+  selectedIds: T[]
+  onToggle: (id: T) => void
+}
