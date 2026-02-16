@@ -10,3 +10,4 @@
  */
 
 export * from "./news-api";
+export * from "./coingecko-api";
