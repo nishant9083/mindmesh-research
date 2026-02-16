@@ -165,12 +165,12 @@ export function NewsCard({ onNewsClick }: NewsCardProps) {
   // ───────────────────────────────────────────────────────────────────────────
 
   return (
-    <Card className="bg-[#0d1421] border-[#1e2738] h-full flex flex-col py-0">
+    <Card className="bg-[#0f1118] border-[#1e2738] h-full flex flex-col py-0">
       {/* Header */}
-      <CardHeader className="pb-3 pt-4 px-4 border-b border-[#1e2738]">
+      <CardHeader className="pb-2 pt-4  px-4  border-[#1e2738] bg-[#181b28]">
         <div className="flex items-center gap-2">
           <CardTitle className="text-white text-base font-medium">News</CardTitle>
-          <ExternalLink className="h-3.5 w-3.5 text-gray-500" />
+          {/* <ExternalLink className="h-3.5 w-3.5 text-gray-500" /> */}
         </div>
       </CardHeader>
       <CardContent className="p-0 flex-1 flex flex-col overflow-hidden">

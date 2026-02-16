@@ -13,9 +13,9 @@ const cryptoData = [
 
 export function PricesChartCard() {
   return (
-    <Card className="bg-[#0d1421] border-[#1e2738] h-full py-0">
-      <CardHeader className="pb-3 pt-4 px-4 border-b border-[#1e2738]">
-        <CardTitle className="text-white text-base font-medium">Prices & Chart</CardTitle>
+    <Card className="bg-[#0f1118] border-[#1e2738] h-full py-0">
+      <CardHeader className="pb-2 pt-4 px-4  border-[#1e2738] bg-[#181b28]">
+        <CardTitle className="text-white text-base font-medium text-justify">Prices & Chart</CardTitle>
         <CardAction>
           <div className="flex items-center gap-2 text-xs text-gray-400">
             <span className="px-2 py-1 bg-[#1a2332] rounded">12H</span>

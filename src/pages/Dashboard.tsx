@@ -13,7 +13,7 @@ export function Dashboard() {
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null)
 
   return (
-    <div className="h-screen bg-[#0a0e17] p-4 overflow-hidden">
+    <div className="h-screen bg-[#060709] p-4 overflow-hidden">
       <div className="flex h-full gap-4">
         {/* LEFT SECTION: Prices & Chart on top, Daily Recap + Research + Mindshare below */}
         <div className="flex-1 flex flex-col gap-4 h-full min-h-0">
