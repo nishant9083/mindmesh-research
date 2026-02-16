@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Search, ExternalLink } from "lucide-react"
+import { Search } from "lucide-react"
 
 import type { NewsItem, NewsSource, RawNewsCategory, NewsQueryParams, NewsCardProps, FilterState } from "@/types/news"
 import { fetchLatestNews, fetchNews, fetchCategories, fetchSources } from "@/services/news-api"
