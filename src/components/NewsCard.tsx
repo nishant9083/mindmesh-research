@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Search } from "lucide-react"
+import { Search, Filter, X, ExternalLink, ChevronDown } from "lucide-react"
 
 import type { NewsItem, NewsSource, RawNewsCategory, NewsQueryParams, NewsCardProps, FilterState } from "@/types/news"
 import { fetchLatestNews, fetchNews, fetchCategories, fetchSources } from "@/services/news-api"
@@ -23,6 +23,10 @@ export function NewsCard({ onNewsClick }: NewsCardProps) {
   // Loading states
   const [isInitialLoading, setIsInitialLoading] = useState(true)
   const [isFiltering, setIsFiltering] = useState(false)
+
+  // UI state
+  const [showSearch, setShowSearch] = useState(false)
+  const [showFilters, setShowFilters] = useState(false)
 
   // Filter state (for user input, not yet applied)
   const [filters, setFilters] = useState<FilterState>({
@@ -165,72 +169,113 @@ export function NewsCard({ onNewsClick }: NewsCardProps) {
   // ───────────────────────────────────────────────────────────────────────────
 
   return (
-    <Card className="bg-[#0f1118] border-[#1e2738] h-full flex flex-col py-0">
-      {/* Header */}
-      <CardHeader className="pb-2 pt-4  px-4  border-[#1e2738] bg-[#181b28] rounded-t-xl">
-        <div className="flex items-center gap-2">
-          <CardTitle className="text-white text-base font-medium">News</CardTitle>
-          {/* <ExternalLink className="h-3.5 w-3.5 text-gray-500" /> */}
-        </div>
-      </CardHeader>
-      <CardContent className="p-0 flex-1 flex flex-col overflow-hidden">
-        {/* Filters Section */}
-        <div className="px-4 pt-0 pb-4 space-y-2 border-b border-[#1e2738]">
-          {/* Search Input */}
-          <div className="relative">
-            <span className="pointer-events-none absolute inset-y-0 left-2 flex items-center text-gray-500">
-              <Search className="h-4 w-4" />
-            </span>
-            <input
-              type="text"
-              value={filters.search}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  handleSearch()
-                }
-              }}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              placeholder="Search news..."
-              className="w-full bg-[#050816] border border-[#1e2738] rounded-md pl-8 pr-2 py-1.5 text-xs text-gray-200 placeholder:text-gray-500 focus:outline-none focus:ring-1 focus:ring-violet-500/60"
-            />
-          </div>
-
-          {/* Multi-select dropdowns row */}
-          <div className="flex gap-2">
-            <MultiSelectDropdown
-              label="Sources"
-              options={allSources.map((s) => ({ id: s.id, label: s.name }))}
-              selectedIds={filters.sourceIds}
-              onToggle={handleSourceToggle}
-            />
-            <MultiSelectDropdown
-              label="Categories"
-              options={allCategories.map((c) => ({ id: c.categoryId, label: c.name }))}
-              selectedIds={filters.categories}
-              onToggle={handleCategoryToggle}
-            />
-          </div>
-
-          {/* Action buttons */}
+    <Card className="bg-[#0f1118] border-[#1e2738] h-full flex flex-col py-0 gap-0">
+      {/* Clean Header with Icon Buttons */}
+      <CardHeader className="py-2 px-4 border-b gap-0 border-[#1e2738] bg-[#181b28] rounded-t-xl">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
+            <CardTitle className="text-white text-base font-medium">News</CardTitle>
+            <ExternalLink className="h-3.5 w-3.5 text-gray-500" />
+          </div>
+          
+          {/* Icon Button Group */}
+          <div className="flex items-center gap-1">
             <button
-              onClick={applyFilters}
-              disabled={isFiltering}
-              className="flex-1 bg-violet-600 hover:bg-violet-700 disabled:bg-violet-800 disabled:cursor-not-allowed text-white text-xs font-medium py-1.5 px-3 rounded-md transition-colors"
+              onClick={() => setShowSearch(!showSearch)}
+              className={`p-2 rounded-md transition-colors ${
+                showSearch 
+                  ? 'bg-violet-600/20 text-violet-400' 
+                  : 'bg-[#303950] text-gray-400 hover:text-gray-200 hover:bg-[#0f1118]'
+              }`}
+              title="Search"
             >
-              {isFiltering ? "Applying..." : "Apply Filters"}
+              <Search className="h-4 w-4" />
             </button>
-            {hasActiveFilters && (
-              <button
-                onClick={clearFilters}
-                className="text-gray-400 hover:text-gray-200 text-xs py-1.5 px-2 rounded-md border border-[#1e2738] hover:border-gray-500 transition-colors"
-              >
-                Clear
-              </button>
-            )}
+            
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`p-2 rounded-md transition-colors ${
+                showFilters || hasActiveFilters
+                  ? 'bg-violet-600/20 text-violet-400' 
+                  : 'bg-[#303950] text-gray-400 hover:text-gray-200 hover:bg-[#0f1118]'
+              }`}
+              title="Filters"
+            >
+              <Filter className="h-4 w-4" />
+            </button>
+            
+            {/* <button
+              className="p-2 rounded-md text-gray-400 hover:text-gray-200 hover:bg-[#0f1118] transition-colors"
+              title="More options"
+            >
+              <ChevronDown className="h-4 w-4" />
+            </button> */}
           </div>
         </div>
 
+        {/* Expandable Search Section */}
+        {showSearch && (
+          <div className="pt-2 animate-in slide-in-from-top-2 duration-200">
+            <div className="relative">
+              <Search className="h-3.5 w-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+              <input
+                type="text"
+                value={filters.search}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    handleSearch()
+                  }
+                }}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                placeholder="Search news..."
+                className="w-full bg-[#050816] border border-[#1e2738] rounded-md pl-8 pr-2 py-2 text-xs text-gray-200 placeholder:text-gray-500 focus:outline-none focus:ring-1 focus:ring-violet-500/60"
+                autoFocus
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Expandable Filters Section */}
+        {showFilters && (
+          <div className="pt-2 space-y-2 animate-in slide-in-from-top-2 duration-200">
+            <div className="flex items-center gap-2">
+              <MultiSelectDropdown
+                label="Sources"
+                options={allSources.map((s) => ({ id: s.id, label: s.name }))}
+                selectedIds={filters.sourceIds}
+                onToggle={handleSourceToggle}
+              />
+              <MultiSelectDropdown
+                label="Categories"
+                options={allCategories.map((c) => ({ id: c.categoryId, label: c.name }))}
+                selectedIds={filters.categories}
+                onToggle={handleCategoryToggle}
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={applyFilters}
+                disabled={isFiltering}
+                className="flex-1 bg-violet-600 hover:bg-violet-700 disabled:bg-violet-800 disabled:cursor-not-allowed text-white text-xs font-medium py-2 px-3 rounded-md transition-colors"
+              >
+                {isFiltering ? "Applying..." : "Apply Filters"}
+              </button>
+              {hasActiveFilters && (
+                <button
+                  onClick={clearFilters}
+                  title="Clear all filters"
+                  className="text-gray-400 hover:text-gray-200 p-2 rounded-md border border-[#1e2738] hover:border-gray-500 transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </CardHeader>
+      
+      <CardContent className="p-0 flex-1 flex flex-col overflow-hidden">
         {/* News List */}
         <div className="flex-1 overflow-hidden">
           <ScrollArea className="h-full">

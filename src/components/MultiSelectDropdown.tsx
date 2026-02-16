@@ -30,7 +30,7 @@ export function MultiSelectDropdown<T extends string | number>({
           {/* Dropdown menu */}
           <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-[#0d1421] border border-[#1e2738] rounded-md shadow-lg max-h-48 overflow-y-auto">
             {options.length === 0 ? (
-              <div className="px-3 py-2 text-xs text-gray-500">No options</div>
+              <div className="px-3 py-2 text-xs text-gray-500 bg-accent">No options</div>
             ) : (
               options.map((option) => {
                 const isSelected = selectedIds.includes(option.id)
@@ -40,7 +40,7 @@ export function MultiSelectDropdown<T extends string | number>({
                     onClick={() => onToggle(option.id)}
                     title={option.label}
                     className={`w-full text-left px-3 py-2 text-xs hover:bg-[#1a2332] transition-colors flex items-center gap-2 ${
-                      isSelected ? "text-violet-300 bg-violet-900/20" : "text-gray-300"
+                      isSelected ? "text-violet-300 bg-violet-900/20" : "text-gray-300 "
                     }`}
                   >
                     <span
