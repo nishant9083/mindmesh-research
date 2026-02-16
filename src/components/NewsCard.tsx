@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState} from "react"
+import { useCallback, useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Search, ExternalLink } from "lucide-react"
@@ -119,9 +119,20 @@ export function NewsCard({ onNewsClick }: NewsCardProps) {
         }))
     }
 
-    const clearFilters = () => {
+    const clearFilters = useCallback(async() => {
         setFilters({ search: "", sourceIds: [], categories: [] })
-    }
+
+        try {
+            setIsFiltering(true)
+
+            let items = await fetchLatestNews()
+            setNewsData(items)
+        } catch (error) {
+            console.error("Failed to fetch news with filters:", error)
+        } finally {
+            setIsFiltering(false)
+        }
+    },[])
 
     const applyFilters = useCallback(async () => {
         const hasFilters =
@@ -188,9 +199,9 @@ export function NewsCard({ onNewsClick }: NewsCardProps) {
                             type="text"
                             value={filters.search}
                             onKeyDown={(event) => {
-                                 if (event.key == "Enter") {
+                                if (event.key == "Enter") {
                                     handleSearch();
-                                 }
+                                }
                             }}
                             onChange={(e) => handleSearchChange(e.target.value)}
                             placeholder="Search news..."
