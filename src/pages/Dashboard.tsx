@@ -13,17 +13,17 @@ export function Dashboard() {
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null)
 
   return (
-    <div className="h-full bg-[#060709] p-4 overflow-hidden">
-      <div className="flex h-full gap-4">
+    <div className="h-full bg-[#060709] p-4 overflow-auto">
+      <div className="flex h-full gap-4 min-w-300">
         {/* LEFT SECTION: Prices & Chart on top, Daily Recap + Research + Mindshare below */}
-        <div className="flex-1 flex flex-col gap-4 h-full min-h-0">
-          {/* Top: Prices & Chart (roughly 60% height of left section) */}
-          <div className="h-[50%] min-h-0">
+        <div className="flex-1 flex flex-col gap-4 min-h-0 min-w-0">
+          {/* Top: Prices & Chart */}
+          <div className="flex-1 min-h-75">
             <PricesChartCard />
           </div>
 
-          {/* Bottom: three cards sharing remaining ~40% height */}
-          <div className="h-[50%] min-h-0 flex gap-4">
+          {/* Bottom: three cards sharing remaining space */}
+          <div className="flex-1 min-h-62.5 flex gap-4">
             <div className="h-full flex-1 min-w-0">
               <DailyRecapCard />
             </div>
@@ -36,12 +36,12 @@ export function Dashboard() {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Market Overview (20% height) + News (80% height) */}
-        <div className="w-[25%] h-full min-h-0 flex flex-col gap-4">
-          <div className="h-[20%] min-h-0">
+        {/* RIGHT COLUMN: Market Overview + News */}
+        <div className="w-[400px] shrink-0 min-h-0 flex flex-col gap-4">
+          <div className="shrink-0">
             <MarketOverviewCard />
           </div>
-          <div className="h-[80%] min-h-0">
+          <div className="flex-1 min-h-0">
             <NewsCard onNewsClick={setSelectedNews} />
           </div>
         </div>
