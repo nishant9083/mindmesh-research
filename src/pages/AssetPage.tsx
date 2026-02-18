@@ -1,6 +1,9 @@
 import { useState } from "react"
-import { AssetSidebar, type AssetTab } from "@/components/layout/AssetSidebar"
+// import { AssetSidebar, type AssetTab } from "@/components/layout/AssetSidebar"
 import { useCoinGecko } from "@/contexts"
+
+// Temporary type definition until AssetSidebar is implemented
+type AssetTab = "overview" | "profile" | "news" | "markets"
 import { Badge } from "@/components/ui/badge"
 import {
   Bell,
@@ -119,8 +122,8 @@ export function AssetPage({ assetId }: AssetPageProps) {
 
   return (
     <div className="h-full flex overflow-hidden">
-      {/* Asset Sidebar */}
-      <AssetSidebar assetId={assetId} activeTab={activeTab} onTabChange={setActiveTab} />
+      {/* Asset Sidebar - Commented out until component is created */}
+      {/* <AssetSidebar assetId={assetId} activeTab={activeTab} onTabChange={setActiveTab} /> */}
 
       {/* Main Content */}
       <div className="flex-1 overflow-auto bg-[#060709]">

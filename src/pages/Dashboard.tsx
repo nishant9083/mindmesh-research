@@ -37,7 +37,7 @@ export function Dashboard() {
         </div>
 
         {/* RIGHT COLUMN: Market Overview + News */}
-        <div className="w-[400px] shrink-0 min-h-0 flex flex-col gap-4">
+        <div className="w-100 shrink-0 min-h-0 flex flex-col gap-4">
           <div className="shrink-0">
             <MarketOverviewCard />
           </div>
