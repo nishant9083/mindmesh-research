@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react"
-import { fetchNews, fetchSources, fetchCategories } from "@/services/news-api"
+import { useCallback, useEffect, useState } from "react"
+import { fetchNews, fetchSources, fetchCategories, fetchLatestNews } from "@/services/news-api"
 import type { NewsItem, NewsSource, RawNewsCategory } from "@/types/news"
-import { NewsDetailPanel } from "@/components"
-import { Search } from "lucide-react"
+import { NewsDetailPanel, MultiSelectDropdown } from "@/components"
+import { Search, X } from "lucide-react"
 
 // Dummy Daily Recap data
 const dailyRecaps = [
@@ -44,18 +44,21 @@ export function NewsPage() {
   const [categories, setCategories] = useState<RawNewsCategory[]>([])
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isFiltering, setIsFiltering] = useState(false)
   
   // Filter states
-  const [searchQuery, setSearchQuery] = useState("")
-  const [selectedSource, setSelectedSource] = useState<string>("All")
-  const [selectedCategory, setSelectedCategory] = useState<string>("All")
+  const [filters, setFilters] = useState({
+    search: "",
+    sourceIds: [] as number[],
+    categoryIds: [] as string[],
+  })
 
   useEffect(() => {
     async function loadData() {
       try {
         setLoading(true)
         const [newsData, sourcesData, categoriesData] = await Promise.all([
-          fetchNews({}),
+          fetchLatestNews(),
           fetchSources(),
           fetchCategories(),
         ])
@@ -72,20 +75,71 @@ export function NewsPage() {
     loadData()
   }, [])
 
-  // Filter news based on search and filters
-  const filteredNews = news.filter((item) => {
-    const matchesSearch = searchQuery === "" || 
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.body.toLowerCase().includes(searchQuery.toLowerCase())
-    
-    const matchesSource = selectedSource === "All" || 
-      item.sourceData.NAME === selectedSource
-    
-    const matchesCategory = selectedCategory === "All" || 
-      item.categoryData?.some(cat => cat.name === selectedCategory)
-    
-    return matchesSearch && matchesSource && matchesCategory
-  })
+  // Filter handlers
+  const handleSourceToggle = (sourceId: number) => {
+    setFilters((prev) => ({
+      ...prev,
+      sourceIds: prev.sourceIds.includes(sourceId)
+        ? prev.sourceIds.filter((id) => id !== sourceId)
+        : [...prev.sourceIds, sourceId],
+    }))
+  }
+
+  const handleCategoryToggle = (categoryId: string) => {
+    setFilters((prev) => ({
+      ...prev,
+      categoryIds: prev.categoryIds.includes(categoryId)
+        ? prev.categoryIds.filter((id) => id !== categoryId)
+        : [...prev.categoryIds, categoryId],
+    }))
+  }
+
+  const applyFilters = useCallback(async () => {
+    const hasFilters =
+      filters.search.trim() !== "" ||
+      filters.sourceIds.length > 0 ||
+      filters.categoryIds.length > 0
+
+    try {
+      setIsFiltering(true)
+
+      let items: NewsItem[]
+
+      if (hasFilters) {
+        const params = {
+          search: filters.search.trim() || undefined,
+          sourceIds: filters.sourceIds.length > 0 ? filters.sourceIds : undefined,
+          categoryIds: filters.categoryIds.length > 0 ? filters.categoryIds : undefined,
+          limit: 50,
+        }
+        items = await fetchNews(params)
+      } else {
+        items = await fetchLatestNews()
+      }
+
+      setNews(items)
+    } catch (error) {
+      console.error("Failed to fetch news with filters:", error)
+    } finally {
+      setIsFiltering(false)
+    }
+  }, [filters])
+
+  const clearFilters = useCallback(async () => {
+    setFilters({ search: "", sourceIds: [], categoryIds: [] })
+
+    try {
+      setIsFiltering(true)
+      const items = await fetchLatestNews()
+      setNews(items)
+    } catch (error) {
+      console.error("Failed to fetch news:", error)
+    } finally {
+      setIsFiltering(false)
+    }
+  }, [])
+
+  const hasActiveFilters = filters.sourceIds.length > 0 || filters.categoryIds.length > 0
 
   return (
     <div className="h-full overflow-y-auto bg-[#060709]">
@@ -138,46 +192,57 @@ export function NewsPage() {
 
         {/* Filters Section */}
         <div className="mb-6">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             {/* Search */}
-            <div className="relative flex-1 max-w-md">
+            <div className="relative flex-1 min-w-75">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
               <input
                 type="text"
                 placeholder="Search News"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                value={filters.search}
+                onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value }))}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    applyFilters()
+                  }
+                }}
                 className="w-full pl-10 pr-4 py-2 bg-[#0f1118] border border-[#1e2738] rounded-lg text-white text-sm focus:outline-none focus:border-[#2a3548]"
               />
             </div>
 
-            {/* Source Filter */}
-            <select
-              value={selectedSource}
-              onChange={(e) => setSelectedSource(e.target.value)}
-              className="px-4 py-2 bg-[#0f1118] border border-[#1e2738] rounded-lg text-white text-sm focus:outline-none focus:border-[#2a3548] cursor-pointer"
-            >
-              <option value="All">Source: All</option>
-              {sources.map((source) => (
-                <option key={source.id} value={source.name}>
-                  {source.name}
-                </option>
-              ))}
-            </select>
+            {/* Multi-Select Filters */}
+            <MultiSelectDropdown
+              label="Sources"
+              options={sources.map((s) => ({ id: s.id, label: s.name }))}
+              selectedIds={filters.sourceIds}
+              onToggle={handleSourceToggle}
+            />
+            
+            <MultiSelectDropdown
+              label="Categories"
+              options={categories.map((c) => ({ id: c.categoryId, label: c.name }))}
+              selectedIds={filters.categoryIds}
+              onToggle={handleCategoryToggle}
+            />
 
-            {/* Category Filter */}
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-4 py-2 bg-[#0f1118] border border-[#1e2738] rounded-lg text-white text-sm focus:outline-none focus:border-[#2a3548] cursor-pointer"
+            {/* Action Buttons */}
+            <button
+              onClick={applyFilters}
+              disabled={isFiltering}
+              className="bg-violet-600 hover:bg-violet-700 disabled:bg-violet-800 disabled:cursor-not-allowed text-white text-sm font-medium py-2 px-6 rounded-lg transition-colors"
             >
-              <option value="All">Category: All</option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.name}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
+              {isFiltering ? "Applying..." : "Apply Filters"}
+            </button>
+            
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                title="Clear all filters"
+                className="text-gray-400 hover:text-gray-200 p-2 rounded-lg border border-[#1e2738] hover:border-gray-500 transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
         </div>
 
@@ -201,11 +266,11 @@ export function NewsPage() {
           {/* Table Body */}
           {loading ? (
             <div className="text-center py-12 text-gray-500">Loading news...</div>
-          ) : filteredNews.length === 0 ? (
+          ) : news.length === 0 ? (
             <div className="text-center py-12 text-gray-500">No news found</div>
           ) : (
             <div className="divide-y divide-[#1e2738]">
-              {filteredNews.map((item) => (
+              {news.map((item) => (
                 <div
                   key={item.id}
                   onClick={() => setSelectedNews(item)}
