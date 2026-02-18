@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom"
-import { Dashboard, ResearchPage, ResearchArticlePage } from "@/pages"
+import { Dashboard, ResearchPage, ResearchArticlePage, NewsPage } from "@/pages"
 import { CoinGeckoProvider } from "@/contexts"
 import { Sidebar, TopBar } from "@/components/layout"
 
@@ -25,6 +25,7 @@ function App() {
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/research" element={<ResearchPage />} />
                 <Route path="/research/:id" element={<ResearchArticlePage />} />
+                <Route path="/news" element={<NewsPage />} />
               </Routes>
             </main>
           </div>

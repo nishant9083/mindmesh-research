@@ -10,3 +10,4 @@
 export { Dashboard } from "./Dashboard"
 export { ResearchPage } from "./ResearchPage"
 export { ResearchArticlePage } from "./ResearchArticlePage"
+export { NewsPage } from "./NewsPage"

@@ -1,10 +1,11 @@
 import { useState } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
-import { Home, FileText } from "lucide-react"
+import { Home, FileText, Newspaper } from "lucide-react"
 
 const navItems = [
   { id: "home" as const, label: "Home", icon: Home, path: "/" },
   { id: "research" as const, label: "Research", icon: FileText, path: "/research" },
+  { id: "news" as const, label: "News", icon: Newspaper, path: "/news" },
 ]
 
 export function Sidebar() {
@@ -14,6 +15,7 @@ export function Sidebar() {
 
   const getActivePage = () => {
     if (location.pathname.startsWith("/research")) return "research"
+    if (location.pathname.startsWith("/news")) return "news"
     return "home"
   }
 
