@@ -48,6 +48,17 @@ export interface RawNewsResponse {
   Err: Record<string, unknown>
 }
 
+export interface ResearchItem {
+  id: string
+  title: string
+  link: string
+  content: string
+  publishedAt: string
+  source: string
+  author: string
+  fetchedAt: string
+}
+
 export interface RawSource {
   id: number
   name: string

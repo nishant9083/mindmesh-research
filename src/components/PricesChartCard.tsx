@@ -48,7 +48,11 @@ const filterCategories: { category: FilterCategory; icon: React.ReactNode; optio
 type ChartTab = "Price" | "Volume" | "Mcap"
 type ChartType = "line" | "area" | "bar"
 
-export function PricesChartCard() {
+interface PricesChartCardProps {
+  onAssetClick?: (assetId: string) => void
+}
+
+export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
   // Use CoinGecko Context
   const {
     marketData,
@@ -391,7 +395,15 @@ export function PricesChartCard() {
                             </span>
                           )}
 
-                          {symbol}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onAssetClick?.(coin.id)
+                            }}
+                            className="hover:text-blue-400 hover:underline transition-colors"
+                          >
+                            {symbol}
+                          </button>
                         </div>
                       </td>
 

@@ -29,7 +29,7 @@ export function TopBar() {
     <header className="h-14 bg-[#0a0d14] border-b border-[#1e2738] flex items-center justify-between px-4 shrink-0">
       {/* Left: Logo & Brand */}
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 bg-linear-to-br to-purple-600 rounded-lg flex items-center justify-center">
+        <div className="w-8 h-8 bg-linear-to-br to-blue-400 rounded-lg flex items-center justify-center">
           <span className="text-white font-bold text-sm">O</span>
         </div>
         <span className="text-white font-semibold text-lg">One-Stop-Trading</span>
@@ -64,7 +64,7 @@ export function TopBar() {
             onClick={() => setIsProfileOpen(!isProfileOpen)}
             className="flex items-center gap-2 p-1.5 pr-3 text-gray-400 hover:text-white hover:bg-[#1a2332] rounded-lg transition-colors"
           >
-            <div className="w-8 h-8 bg-linear-to-br to-purple-600 rounded-full flex items-center justify-center">
+            <div className="w-8 h-8 bg-linear-to-br to-blue-400 rounded-full flex items-center justify-center">
               <span className="text-white font-medium text-sm">U</span>
             </div>
             <ChevronDown className={`w-4 h-4 transition-transform ${isProfileOpen ? "rotate-180" : ""}`} />

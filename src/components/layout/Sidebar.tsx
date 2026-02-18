@@ -1,18 +1,23 @@
 import { useState } from "react"
+import { useNavigate, useLocation } from "react-router-dom"
 import { Home, FileText } from "lucide-react"
 
-interface SidebarProps {
-  activePage: "home" | "research"
-  onPageChange: (page: "home" | "research") => void
-}
-
 const navItems = [
-  { id: "home" as const, label: "Home", icon: Home },
-  { id: "research" as const, label: "Research", icon: FileText },
+  { id: "home" as const, label: "Home", icon: Home, path: "/" },
+  { id: "research" as const, label: "Research", icon: FileText, path: "/research" },
 ]
 
-export function Sidebar({ activePage, onPageChange }: SidebarProps) {
+export function Sidebar() {
+  const navigate = useNavigate()
+  const location = useLocation()
   const [hoveredItem, setHoveredItem] = useState<string | null>(null)
+
+  const getActivePage = () => {
+    if (location.pathname.startsWith("/research")) return "research"
+    return "home"
+  }
+
+  const activePage = getActivePage()
 
   return (
     <aside className="w-16 bg-[#0a0d14] border-r border-[#1e2738] flex flex-col items-center py-4 shrink-0">
@@ -25,12 +30,12 @@ export function Sidebar({ activePage, onPageChange }: SidebarProps) {
           return (
             <div key={item.id} className="relative">
               <button
-                onClick={() => onPageChange(item.id)}
+                onClick={() => navigate(item.path)}
                 onMouseEnter={() => setHoveredItem(item.id)}
                 onMouseLeave={() => setHoveredItem(null)}
                 className={`w-11 h-11 rounded-lg flex items-center justify-center transition-all ${
                   isActive
-                    ? "bg-[#afb6eb] text-black border"
+                    ? "bg-[#c2cce7] text-black border"
                     : "text-gray-500 hover:text-white hover:bg-[#1a2332]"
                 }`}
               >
