@@ -134,82 +134,106 @@ export async function fetchSources(): Promise<NewsSource[]> {
   return raw.map((s) => ({ id: s.sourceId, name: s.name }));
 }
 
-// TODO: Replace with actual research API endpoint
-export async function fetchResearchArticles(): Promise<ResearchItem[]> {
-  // Dummy endpoint - update this with the actual backend URL
-  const RESEARCH_URL = `${API_BASE}/research`;
-  
+/**
+ * Extracts image URL from Medium RSS description HTML
+ */
+function extractImageUrl(description: string): string | undefined {
   try {
-    const { data } = await axios.get<ResearchItem[]>(RESEARCH_URL);
-    if (!data || !Array.isArray(data)) {
+    const imgMatch = description.match(/<img[^>]+src="([^"]+)"/i);
+    return imgMatch ? imgMatch[1] : undefined;
+  } catch (error) {
+    return undefined;
+  }
+}
+
+/**
+ * Extracts text content from Medium RSS description HTML
+ */
+function extractContentSnippet(description: string): string {
+  try {
+    // Extract content from <p class="medium-feed-snippet">
+    const snippetMatch = description.match(/<p class="medium-feed-snippet">([^<]+)<\/p>/i);
+    if (snippetMatch) {
+      // Decode HTML entities
+      const text = snippetMatch[1]
+        .replace(/&#x([0-9A-F]+);/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+        .replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(parseInt(dec, 10)))
+        .replace(/&quot;/g, '"')
+        .replace(/&apos;/g, "'")
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&amp;/g, '&');
+      return text.trim();
+    }
+    
+    // Fallback: strip all HTML tags
+    const stripped = description.replace(/<[^>]+>/g, ' ').trim();
+    return stripped.substring(0, 200) + (stripped.length > 200 ? '...' : '');
+  } catch (error) {
+    return '';
+  }
+}
+
+/**
+ * Fetches research articles from local Medium RSS XML file
+ */
+export async function fetchResearchArticles(): Promise<ResearchItem[]> {
+  try {
+    // Fetch local XML file from public folder
+    const { data } = await axios.get('/medium-feed.xml', {
+      responseType: 'text',
+    });
+    
+    // Parse XML
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(data, 'text/xml');
+    
+    // Check for parsing errors
+    const parseError = xmlDoc.querySelector('parsererror');
+    if (parseError) {
+      console.error('XML parsing error:', parseError.textContent);
       return [];
     }
-    return data;
+    
+    // Get channel title (source)
+    const channelTitle = xmlDoc.querySelector('channel > title')?.textContent || 'Cryptocurrency on Medium';
+    
+    // Get all items
+    const items = xmlDoc.querySelectorAll('item');
+    const fetchedAt = new Date().toISOString();
+    
+    const articles: ResearchItem[] = Array.from(items).map((item, index) => {
+      const title = item.querySelector('title')?.textContent || '';
+      const link = item.querySelector('link')?.textContent || '';
+      const description = item.querySelector('description')?.textContent || '';
+      const pubDate = item.querySelector('pubDate')?.textContent || '';
+      const creator = item.querySelector('creator')?.textContent || 'Unknown';
+      const guid = item.querySelector('guid')?.textContent || '';
+      
+      // Extract image URL and content snippet from description
+      const imageUrl = extractImageUrl(description);
+      const content = extractContentSnippet(description);
+      
+      // Generate ID from guid or link
+      const id = guid ? guid.split('/').pop() || `${index + 1}` : `${index + 1}`;
+      
+      return {
+        id,
+        title,
+        link,
+        content,
+        publishedAt: pubDate,
+        source: channelTitle,
+        author: creator,
+        imageUrl,
+        fetchedAt,
+      };
+    });
+    
+    return articles;
   } catch (error) {
-    console.error("Error fetching research articles:", error);
-    // Return dummy data for development
-    return [
-      {
-        id: "1",
-        title: "Predictive Onchain Intelligence: Gaining Foresight in Crypto Markets of 2026",
-        link: "https://medium.com/@aadilzaki48/predictive-onchain-intelligence-gaining-foresight-in-crypto-markets-of-2026-b0c66c7d3d1b",
-        content: "Crypto markets in 2026 are unforgiving. Speed has replaced patience, and reaction has given way to anticipation...",
-        publishedAt: "Wed, 18 Feb 2026 10:01:15 GMT",
-        source: "Cryptocurrency on Medium",
-        author: "Aadil Zaki",
-        fetchedAt: "2026-02-18T10:13:52.670Z"
-      },
-      {
-        id: "2",
-        title: "Crypto Venture Weekly: Feb. 9-13, 2026",
-        link: "https://example.com/article2",
-        content: "Weekly analysis of venture capital movements in the cryptocurrency space...",
-        publishedAt: "Fri, 13 Feb 2026 08:00:00 GMT",
-        source: "Crypto Research",
-        author: "Alice Hou",
-        fetchedAt: "2026-02-18T10:13:52.670Z"
-      },
-      {
-        id: "3",
-        title: "Fuse: The Energy Network and TGE",
-        link: "https://example.com/article3",
-        content: "Deep dive into Fuse network's token generation event and energy infrastructure...",
-        publishedAt: "Thu, 12 Feb 2026 14:30:00 GMT",
-        source: "Blockchain Insights",
-        author: "Matthew Nay",
-        fetchedAt: "2026-02-18T10:13:52.670Z"
-      },
-      {
-        id: "4",
-        title: "In The Stables: CLARITY Act Hits Wall Over Yield",
-        link: "https://example.com/article4",
-        content: "Analysis of the CLARITY Act's impact on stablecoin yield regulations...",
-        publishedAt: "Wed, 11 Feb 2026 11:00:00 GMT",
-        source: "Regulatory Watch",
-        author: "Alexander Beaudry",
-        fetchedAt: "2026-02-18T10:13:52.670Z"
-      },
-      {
-        id: "5",
-        title: "DeFi Protocol Security: Best Practices for 2026",
-        link: "https://example.com/article5",
-        content: "Comprehensive guide to securing DeFi protocols in the evolving threat landscape...",
-        publishedAt: "Tue, 10 Feb 2026 09:15:00 GMT",
-        source: "DeFi Security",
-        author: "Sarah Chen",
-        fetchedAt: "2026-02-18T10:13:52.670Z"
-      },
-      {
-        id: "6",
-        title: "Layer 2 Scaling Solutions: Performance Comparison",
-        link: "https://example.com/article6",
-        content: "Benchmarking the latest Layer 2 solutions for Ethereum and their real-world performance...",
-        publishedAt: "Mon, 09 Feb 2026 16:45:00 GMT",
-        source: "Scaling Research",
-        author: "David Kim",
-        fetchedAt: "2026-02-18T10:13:52.670Z"
-      }
-    ];
+    console.error('Error fetching research articles from XML file:', error);
+    return [];
   }
 }
 

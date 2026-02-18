@@ -56,6 +56,7 @@ export interface ResearchItem {
   publishedAt: string
   source: string
   author: string
+  imageUrl?: string
   fetchedAt: string
 }
 

@@ -128,8 +128,18 @@ export function ResearchPage() {
                                         onClick={() => navigate(`/research/${report.id}`)}
                                         className="flex items-center gap-3 p-2 bg-[#181b28] hover:bg-[#1a2332] rounded border border-[#1e2738] cursor-pointer transition-colors"
                                     >
-                                        <div className="w-32 h-full bg-[#1a2332] rounded flex items-center justify-center text-xs text-gray-500">
-                                            IMG
+                                        <div className="w-32 h-full bg-[#1a2332] rounded overflow-hidden flex-shrink-0">
+                                            {report.imageUrl ? (
+                                                <img 
+                                                    src={report.imageUrl} 
+                                                    alt={report.title}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">
+                                                    IMG
+                                                </div>
+                                            )}
                                         </div>
                                         <div className="flex flex-col py-1 justify-between h-full flex-1">
                                             <div className="flex items-center gap-2 mb-1">
