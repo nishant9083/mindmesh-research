@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { fetchResearchArticles, fetchNews } from "@/services/news-api"
 import type { ResearchItem, NewsItem } from "@/types/news"
 import { ChevronRight } from "lucide-react"
+import { NewsDetailPanel } from "@/components"
 
 // Dummy spotlight data
 const spotlightData = {
@@ -24,6 +25,7 @@ export function ResearchPage() {
     const navigate = useNavigate()
     const [latestReports, setLatestReports] = useState<ResearchItem[]>([])
     const [newsletters, setNewsletters] = useState<NewsItem[]>([])
+    const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null)
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
@@ -246,6 +248,7 @@ export function ResearchPage() {
                                 {newsletters.map((newsletter) => (
                                     <div
                                         key={newsletter.id}
+                                        onClick={() => setSelectedNews(newsletter)}
                                         className="bg-[#0f1118] border border-[#1e2738] rounded-lg overflow-hidden hover:border-[#2a3548] transition-colors cursor-pointer shrink-0 w-64"
                                     >
                                         <div className="p-4">
@@ -268,6 +271,8 @@ export function ResearchPage() {
                     )}
                 </div>
             </div>
+
+            <NewsDetailPanel selectedNews={selectedNews} onClose={() => setSelectedNews(null)} />
         </div>
     )
 }
