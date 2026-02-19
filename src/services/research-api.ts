@@ -8,18 +8,18 @@ const RESEARCH_URL = `${API_BASE}/research`;
  * Fetches all research articles from backend API
  */
 export async function fetchResearchArticles(): Promise<ResearchItem[]> {
-  try {
-    const { data } = await axios.get<ResearchItem[]>(RESEARCH_URL);
-    
-    if (!data || !Array.isArray(data)) {
-      return [];
+    try {
+        const { data: response } = await axios.get<{ success: boolean; data: ResearchItem[]; pagination: any }>(RESEARCH_URL);
+        
+        if (!response?.success || !response?.data || !Array.isArray(response.data)) {
+            return [];
+        }
+        console.log(response);
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching research articles:', error);
+        return [];
     }
-    
-    return data;
-  } catch (error) {
-    console.error('Error fetching research articles:', error);
-    return [];
-  }
 }
 
 /**

@@ -1,5 +1,5 @@
-import { ExternalLink, User, Globe, Link2, Calendar } from "lucide-react"
-import { formatDate, getSentimentClasses } from "@/lib/format"
+import { ExternalLink, User, Globe, Link2 } from "lucide-react"
+import { getSentimentClasses } from "@/lib/format"
 import type { NewsItem } from "@/types/news"
 
 interface NewsDetailPanelProps {
@@ -29,77 +29,87 @@ export function NewsDetailPanel({ selectedNews, onClose }: NewsDetailPanelProps)
           <span className="text-3xl font-bold">×</span>
         </button>
 
-        {/* Hero Image */}
-        {selectedNews.imageUrl ? (
-          <div className="relative w-full h-56 shrink-0 overflow-hidden">
-            <img
-              src={selectedNews.imageUrl}
-              alt={selectedNews.title}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = "none"
-              }}
-            />
-            <div className="absolute inset-0 bg-linear-to-t from-[#0d1421] via-transparent to-transparent" />
-          </div>
-        ) : (
-          <div className="w-full h-32 shrink-0 bg-linear-to-br from-[#1a2332] to-[#0d1421] flex items-center justify-center">
-            <Globe className="h-12 w-12 text-gray-600" />
-          </div>
-        )}
+        {/* Header Content with Thumbnail */}
+        <div className="px-6 py-15 border-b border-[#1e2738]">
+          <div className="flex gap-4">
+            {/* Thumbnail Image */}
+            <div className="shrink-0">
+              {selectedNews.imageUrl ? (
+                <div className="w-48 h-24 rounded-lg overflow-hidden bg-[#1a2332] border border-[#2a3548]">
+                  <img
+                    src={selectedNews.imageUrl}
+                    alt={selectedNews.title}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement
+                      target.style.display = "none"
+                      target.parentElement!.innerHTML = `<div class="w-full h-full flex items-center justify-center"><svg class="h-8 w-8 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>`
+                    }}
+                  />
+                </div>
+              ) : (
+                <div className="w-24 h-24 rounded-lg bg-linear-to-br from-[#1a2332] to-[#0d1421] border border-[#2a3548] flex items-center justify-center">
+                  <Globe className="h-8 w-8 text-gray-600" />
+                </div>
+              )}
+            </div>
 
-        {/* Header Content */}
-        <div className="px-6 py-4 border-b border-[#1e2738] -mt-8 relative z-10">
-          {/* Sentiment & Categories */}
-          <div className="flex flex-wrap items-center gap-2 mb-3">
-            <span
-              className={`text-xs px-2.5 py-1 uppercase tracking-wide font-medium ${getSentimentClasses(
-                selectedNews.sentiment
-              )}`}
-            >
-              {selectedNews.sentiment}
-            </span>
-            {selectedNews.categoryData?.length > 0 && (
-              <>
-                {selectedNews.categoryData.slice(0, 4).map((cat) => (
-                  <span
-                    key={cat.id}
-                    className="px-2 py-1 rounded-full bg-violet-500/20 text-xs text-violet-300 border border-violet-500/30"
-                  >
-                    {cat.category}
-                  </span>
-                ))}
-              </>
-            )}
+            {/* Title and Meta */}
+            <div className="flex-1 min-w-0">
+
+              {/* Title */}
+              <h2 className="text-lg font-bold leading-tight text-white line-clamp-2">
+                {selectedNews.title}
+              </h2>
+
+              {/* Meta info row */}
+              <div className="flex flex-wrap items-center gap-2 text-xs text-gray-400 mt-1">
+                <div className="flex items-center gap-1">
+                  <User className="h-3 w-3" />
+                  <span>{selectedNews.authors || "Unknown"}</span>
+                </div>
+                <span className="text-gray-600">•</span>
+                <div className="flex items-center gap-1">
+                  <Globe className="h-3 w-3" />
+                  <span className="uppercase">{selectedNews.lang}</span>
+                </div>
+              </div>
+
+              {/* Sentiment & Categories */}
+              <div className="flex flex-wrap items-center gap-2 mt-4 mb-2">
+                <span
+                  className={`text-xs px-2.5 py-1 uppercase tracking-wide font-medium ${getSentimentClasses(
+                    selectedNews.sentiment
+                  )}`}
+                >
+                  {selectedNews.sentiment}
+                </span>
+                {selectedNews.categoryData?.length > 0 && (
+                  <>
+                    {selectedNews.categoryData.slice(0, 2).map((cat) => (
+                      <span
+                        key={cat.id}
+                        className="px-2 py-0.5 rounded-full bg-violet-500/20 text-xs text-violet-300 border border-violet-500/30"
+                      >
+                        {cat.category}
+                      </span>
+                    ))}
+                  </>
+                )}
+              </div>
+            </div>
           </div>
 
-          {/* Title */}
-          <h2 className="text-xl font-bold leading-tight text-white mb-2">
-            {selectedNews.title}
-          </h2>
 
           {/* Subtitle */}
           {selectedNews.subtitle && (
-            <p className="text-sm text-gray-400 leading-relaxed mb-3">
+            <p className="text-sm text-gray-400 leading-relaxed mt-3">
               {selectedNews.subtitle}
             </p>
           )}
 
-          {/* Meta info row */}
-          <div className="flex flex-wrap items-center gap-3 text-xs text-gray-400">
-            <div className="flex items-center gap-1.5">
-              <User className="h-3.5 w-3.5" />
-              <span>{selectedNews.authors || "Unknown"}</span>
-            </div>
-            <span className="text-gray-600">•</span>
-            <div className="flex items-center gap-1.5">
-              <Globe className="h-3.5 w-3.5" />
-              <span className="uppercase">{selectedNews.lang}</span>
-            </div>
-          </div>
-
           {/* Engagement Stats */}
-          <div className="flex items-center gap-4 mt-3 pt-3 border-t border-[#1e2738]">
+          <div className="flex items-center gap-3 mt-4 pt-3 border-t border-[#1e2738]">
             <div className="text-xs text-gray-500 bg-[#1a2332] px-2 py-1 rounded">
               Score: <span className="text-white font-medium">{selectedNews.score}</span>
             </div>
@@ -130,7 +140,7 @@ export function NewsDetailPanel({ selectedNews, onClose }: NewsDetailPanelProps)
           </div>
 
           {/* Article Details */}
-          <div className="space-y-3">
+          {/* <div className="space-y-3">
             <h3 className="text-sm font-semibold text-white flex items-center gap-2">
               <span className="w-1 h-4 bg-violet-500 rounded-full" />
               Article Details
@@ -163,7 +173,7 @@ export function NewsDetailPanel({ selectedNews, onClose }: NewsDetailPanelProps)
                 </div>
               )}
             </div>
-          </div>
+          </div> */}
 
           {/* All Categories */}
           {selectedNews.categoryData?.length > 0 && (

@@ -11,4 +11,5 @@
 
 export * from "./news-api";
 export * from "./research-api";
+export * from "./daily-recap-api";
 export * from "./coingecko-api";

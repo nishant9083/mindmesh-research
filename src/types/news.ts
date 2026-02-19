@@ -65,6 +65,41 @@ export interface ResearchItem {
   updatedAt: string
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Daily Recap Types
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Source reference for a daily recap bullet point
+ */
+export interface DailyRecapSource {
+  id: string
+  title: string
+  url: string
+  sourceName: string
+}
+
+/**
+ * A single bullet point in the daily recap
+ */
+export interface DailyRecapBullet {
+  text: string
+  sources: DailyRecapSource[]
+}
+
+/**
+ * Daily Recap item - AI-generated summary of the day's news
+ */
+export interface DailyRecap {
+  id: string
+  date: string                    // ISO date string (e.g., "2026-02-19")
+  displayDate: string             // Formatted display date (e.g., "Today, Feb 19")
+  aiSummary: string               // Full AI-generated summary text
+  bullets: DailyRecapBullet[]     // Structured bullet points with sources
+  updatedAt: string               // Last updated timestamp
+  createdAt: string               // Creation timestamp
+}
+
 export interface RawSource {
   id: number
   name: string

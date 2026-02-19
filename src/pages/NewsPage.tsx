@@ -1,48 +1,17 @@
 import { useCallback, useEffect, useState } from "react"
 import { fetchNews, fetchSources, fetchCategories, fetchLatestNews } from "@/services/news-api"
-import type { NewsItem, NewsSource, RawNewsCategory } from "@/types/news"
-import { NewsDetailPanel, MultiSelectDropdown } from "@/components"
+import { fetchDailyRecaps, truncateToWords } from "@/services/daily-recap-api"
+import type { NewsItem, NewsSource, RawNewsCategory, DailyRecap } from "@/types/news"
+import { NewsDetailPanel, DailyRecapDetailPanel, MultiSelectDropdown } from "@/components"
 import { Search, X } from "lucide-react"
-
-// Dummy Daily Recap data
-const dailyRecaps = [
-  {
-    id: 1,
-    date: "Today, Feb 18",
-    title: "The cryptocurrency community is facing internal cultural challenges, including harassment and ONXBT...",
-  },
-  {
-    id: 2,
-    date: "Tue, Feb 17",
-    title: "Strategy, formerly MicroStrategy, acquired an additional 9,460 Bitcoin, valued at approximately $748.8 million...",
-  },
-  {
-    id: 3,
-    date: "Mon, Feb 16",
-    title: "Memecoin trading is experiencing extreme volatility, with some traders seeing large gains and...",
-  },
-  {
-    id: 4,
-    date: "Sun, Feb 15",
-    title: "Michael Saylor's Strategy (formerly MicroStrategy), holds 714,644 Bitcoin, valued at approximately...",
-  },
-  {
-    id: 5,
-    date: "Sat, Feb 14",
-    title: "Memecoins are a highly volatile segment of cryptocurrency markets where traders seek massive retur...",
-  },
-  {
-    id: 6,
-    date: "Fri, Feb 13",
-    title: "Trump Media and Technology Group has filed registration statements with the SEC for two...",
-  },
-]
 
 export function NewsPage() {
   const [news, setNews] = useState<NewsItem[]>([])
   const [sources, setSources] = useState<NewsSource[]>([])
   const [categories, setCategories] = useState<RawNewsCategory[]>([])
+  const [dailyRecaps, setDailyRecaps] = useState<DailyRecap[]>([])
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null)
+  const [selectedRecap, setSelectedRecap] = useState<DailyRecap | null>(null)
   const [loading, setLoading] = useState(true)
   const [isFiltering, setIsFiltering] = useState(false)
   
@@ -57,14 +26,16 @@ export function NewsPage() {
     async function loadData() {
       try {
         setLoading(true)
-        const [newsData, sourcesData, categoriesData] = await Promise.all([
+        const [newsData, sourcesData, categoriesData, recapsData] = await Promise.all([
           fetchLatestNews(),
           fetchSources(),
           fetchCategories(),
+          fetchDailyRecaps(7),
         ])
         setNews(newsData)
         setSources(sourcesData)
         setCategories(categoriesData)
+        setDailyRecaps(recapsData)
       } catch (error) {
         console.error("Failed to fetch news data:", error)
       } finally {
@@ -176,17 +147,22 @@ export function NewsPage() {
             id="daily-recaps-scroll"
             className="flex gap-4 overflow-x-auto pb-4 scroll-smooth no-scrollbar" 
           >
-            {dailyRecaps.map((recap) => (
-              <div
-            key={recap.id}
-            className="bg-[#0f1118] border border-[#1e2738] rounded-lg p-4 hover:border-[#2a3548] transition-colors cursor-pointer shrink-0 w-80"
-              >
-            <div className="text-xs text-blue-400 mb-2">(●) {recap.date}</div>
-            <p className="text-sm text-gray-300 leading-relaxed line-clamp-3">
-              {recap.title}
-            </p>
-              </div>
-            ))}
+            {dailyRecaps.length === 0 ? (
+              <div className="text-gray-500 text-sm py-8">Loading daily recaps...</div>
+            ) : (
+              dailyRecaps.map((recap) => (
+                <div
+                  key={recap.id}
+                  onClick={() => setSelectedRecap(recap)}
+                  className="bg-[#0f1118] border border-[#1e2738] rounded-lg p-4 hover:border-[#2a3548] transition-colors cursor-pointer shrink-0 w-80"
+                >
+                  <div className="text-xs text-blue-400 mb-2">(●) {recap.displayDate}</div>
+                  <p className="text-sm text-gray-300 leading-relaxed line-clamp-3">
+                    {truncateToWords(recap.aiSummary, 12)}
+                  </p>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
@@ -326,6 +302,7 @@ export function NewsPage() {
       </div>
 
       <NewsDetailPanel selectedNews={selectedNews} onClose={() => setSelectedNews(null)} />
+      <DailyRecapDetailPanel selectedRecap={selectedRecap} onClose={() => setSelectedRecap(null)} />
     </div>
   )
 }

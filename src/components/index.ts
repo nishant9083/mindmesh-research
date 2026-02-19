@@ -11,6 +11,7 @@
 export { NewsCard } from "./NewsCard"
 export { NewsItemRow } from "./NewsItemRow"
 export { NewsDetailPanel } from "./NewsDetailPanel"
+export { DailyRecapDetailPanel } from "./DailyRecapDetailPanel"
 export { MultiSelectDropdown } from "./MultiSelectDropdown"
 export { LoadingState, EmptyState } from "./StateIndicators"
 
