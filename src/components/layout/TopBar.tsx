@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react"
-import { Search, Bell, ChevronDown, User, Settings, LogOut, HelpCircle, CreditCard } from "lucide-react"
+import { Search, ChevronDown, User, Settings, LogOut, HelpCircle, CreditCard } from "lucide-react"
 
 export function TopBar() {
   const [isProfileOpen, setIsProfileOpen] = useState(false)

@@ -57,7 +57,6 @@ export function ResearchArticlePage() {
     day: "numeric"
   })
   const timeAgo = getTimeAgo(publishedDate)
-  const readTime = "15 min read" // You can calculate this based on content length
   const authorName = article.author || 'Unknown Author'
 
   return (
