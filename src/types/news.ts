@@ -51,13 +51,18 @@ export interface RawNewsResponse {
 export interface ResearchItem {
   id: string
   title: string
-  link: string
-  content: string
-  publishedAt: string
+  description?: string
+  url: string
   source: string
-  author: string
+  author?: string
+  publishedAt?: string
+  content?: string
+  aiSummary?: string
   imageUrl?: string
-  fetchedAt: string
+  tags?: string
+  isSummarized: boolean
+  createdAt: string
+  updatedAt: string
 }
 
 export interface RawSource {

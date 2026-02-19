@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { fetchResearchArticles, fetchNews } from "@/services/news-api"
+import { fetchResearchArticles } from "@/services/research-api"
+import { fetchNews } from "@/services/news-api"
 import type { ResearchItem, NewsItem } from "@/types/news"
 import { ChevronRight } from "lucide-react"
 import { NewsDetailPanel } from "@/components"
@@ -144,7 +145,9 @@ export function ResearchPage() {
                                         <div className="flex flex-col py-1 justify-between h-full flex-1">
                                             <div className="flex items-center gap-2 mb-1">
                                                 <span className="text-xs text-gray-500">
-                                                    {new Date(report.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                    {report.publishedAt 
+                                                        ? new Date(report.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                                                        : new Date(report.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                                                 </span>
                                             </div>
                                             <h4 className="text-sm text-white font-bold line-clamp-2">{report.title}</h4>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { fetchResearchArticleById } from "@/services/news-api"
+import { fetchResearchArticleById } from "@/services/research-api"
 import type { ResearchItem } from "@/types/news"
 
 export function ResearchArticlePage() {
@@ -50,7 +50,7 @@ export function ResearchArticlePage() {
   }
 
   // Format the published date
-  const publishedDate = new Date(article.publishedAt)
+  const publishedDate = article.publishedAt ? new Date(article.publishedAt) : new Date(article.createdAt)
   const formattedDate = publishedDate.toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
@@ -58,6 +58,7 @@ export function ResearchArticlePage() {
   })
   const timeAgo = getTimeAgo(publishedDate)
   const readTime = "15 min read" // You can calculate this based on content length
+  const authorName = article.author || 'Unknown Author'
 
   return (
     <div className="h-full overflow-y-auto bg-[#060709] relative">
@@ -91,101 +92,73 @@ export function ResearchArticlePage() {
           {/* Author Info */}
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-full bg-[#1a2332] flex items-center justify-center text-white font-semibold">
-              {article.author.charAt(0).toUpperCase()}
+              {authorName.charAt(0).toUpperCase()}
             </div>
             <div className="flex-1">
-              <h3 className="text-white font-semibold">{article.author}</h3>
+              <h3 className="text-white font-semibold">{authorName}</h3>
               <div className="flex items-center gap-2 text-sm text-gray-400">
                 <span>{timeAgo}</span>
                 <span>·</span>
                 <span>{readTime}</span>
               </div>
             </div>
+            {/* Read Original Button */}
+            <a 
+              href={article.url} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
+            >
+              Read Original
+            </a>
           </div>
 
-          {/* Action Buttons */}
-          {/* <div className="flex items-center gap-3 mt-6">
-            <button className="flex items-center gap-2 px-4 py-2 bg-[#1a2332] hover:bg-[#1f2840] text-white rounded-lg transition-colors">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15.536a5 5 0 001.414 1.414m2.828-9.9a9 9 0 012.828 2.828" />
-              </svg>
-              <span className="text-sm">21 mins</span>
-            </button>
-            
-            <button className="flex items-center gap-2 px-4 py-2 bg-[#1a2332] hover:bg-[#1f2840] text-white rounded-lg transition-colors">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-            </button>
-            
-            <button className="flex items-center gap-2 px-4 py-2 bg-[#1a2332] hover:bg-[#1f2840] text-white rounded-lg transition-colors">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-              </svg>
-            </button>
-            
-            <button className="flex items-center gap-2 px-4 py-2 bg-[#1a2332] hover:bg-[#1f2840] text-white rounded-lg transition-colors">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-              </svg>
-            </button>
-          </div> */}
+          {/* Tags */}
+          {article.tags && (
+            <div className="flex flex-wrap gap-2 mt-4">
+              {article.tags.split(',').map((tag, index) => (
+                <span 
+                  key={index}
+                  className="px-3 py-1 bg-[#1a2332] text-gray-300 text-xs rounded"
+                >
+                  {tag.trim()}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Key Insights Section */}
-        <div className="mb-8 bg-[#0d1117] border border-[#1e2738] rounded-lg p-6">
-          <h2 className="text-xl font-bold text-white mb-4">Key Insights</h2>
-          <ul className="space-y-3 text-gray-300">
-            <li className="flex gap-3">
-              <span className="text-blue-500 mt-1">•</span>
-              <span>
-                <strong className="text-white">Flow has formalized its expansion deeper into consumer DeFi</strong> in a published strategy built around stablecoin-based consumer finance and enshrined protocols, a small set of default apps designed to concentrate liquidity and integrations.
-              </span>
-            </li>
-            <li className="flex gap-3">
-              <span className="text-blue-500 mt-1">•</span>
-              <span>
-                <strong className="text-white">Flow's expansion into consumer DeFi is anchored to two protocol upgrades:</strong> Crescendo makes Flow EVM a practical target for Solidity teams and existing EVM tooling, and Forte adds native, reusable automation for recurring actions.
-              </span>
-            </li>
-            <li className="flex gap-3">
-              <span className="text-blue-500 mt-1">•</span>
-              <span>
-                <strong className="text-white">Flow EVM supports fee sponsorship,</strong> letting apps pay transaction fees on a user's behalf, a prerequisite for consumer payment flows where users can transact without holding FLOW or managing gas.
-              </span>
-            </li>
-            <li className="flex gap-3">
-              <span className="text-blue-500 mt-1">•</span>
-              <span>
-                <strong className="text-white">The Flow Foundation is developing Flow Credit Market (FCM) as the first enshrined protocol,</strong> with Peak.Money positioned as the flywheel app that brings consumer usage into the shared credit layer.
-              </span>
-            </li>
-            <li className="flex gap-3">
-              <span className="text-blue-500 mt-1">•</span>
-              <span>
-                <strong className="text-white">PYUSD concentration creates a clear default dollar-denominated asset on Flow,</strong> which can lower go-to-market friction for apps that want to build around a PayPal-branded stablecoin and a single primary settlement asset.
-              </span>
-            </li>
-          </ul>
-        </div>
-
-        {/* Primer Section */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-white mb-4">Primer</h2>
-          <div className="text-gray-300 leading-relaxed space-y-4">
-            <p>{article.content}</p>
-            <p>
-              This article explores the strategic direction of Flow Network as it pivots from its NFT origins
-              into the consumer DeFi space. We'll examine the technical upgrades, protocol design, and market
-              positioning that underpin this transition.
-            </p>
-            <p>
-              The cryptocurrency landscape in 2026 demands more than just technological innovation—it requires
-              a clear go-to-market strategy that balances user experience with protocol sustainability. Flow's
-              approach represents a studied response to these market dynamics.
-            </p>
+        {/* AI Summary Section */}
+        {article.aiSummary && (
+          <div className="mb-8 bg-[#0d1117] border border-blue-500/30 rounded-lg p-6">
+            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+              <span className="text-blue-400">✨</span> AI Summary
+            </h2>
+            <div className="text-gray-300 leading-relaxed">
+              <p>{article.aiSummary}</p>
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Content Section */}
+        {article.content && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-white mb-4">Content</h2>
+            <div className="text-gray-300 leading-relaxed space-y-4">
+              <p>{article.content}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Description Section */}
+        {article.description && !article.content && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-white mb-4">Overview</h2>
+            <div className="text-gray-300 leading-relaxed space-y-4">
+              <p>{article.description}</p>
+            </div>
+          </div>
+        )}
 
         {/* Article Content */}
         <div className="prose prose-invert max-w-none">

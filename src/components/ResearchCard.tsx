@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { PlaceholderCard } from "./PlaceholderCard"
-import { fetchResearchArticles } from "@/services/news-api"
+import { fetchResearchArticles } from "@/services/research-api"
 import type { ResearchItem } from "@/types/news"
 
 function ResearchItemCard({ item }: { item: ResearchItem }) {
@@ -27,7 +27,7 @@ function ResearchItemCard({ item }: { item: ResearchItem }) {
         </div>
         <div className="flex flex-col py-1 justify-between h-full flex-1">
           <h4 className="text-sm text-white font-bold">{item.title}</h4>
-          <p className="text-xs text-gray-500">👤 {item.author}</p>
+          <p className="text-xs text-gray-500">👤 {item.author || 'Unknown'}</p>
         </div>
       </div>
     )
