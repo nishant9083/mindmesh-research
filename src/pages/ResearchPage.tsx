@@ -112,11 +112,8 @@ export function ResearchPage() {
                                 <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
-                                Latest Reports
+                                Latest Research
                             </h2>
-                            <button className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1 border-none!">
-                                View All <ChevronRight className="w-4 h-4" />
-                            </button>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -286,9 +283,86 @@ export function ResearchPage() {
                         </div>
                     )}
                 </div>
+            
+
+            {/* Research Table Section */}
+            <div className="mt-12">
+                <div className="flex items-center gap-2 mb-4">
+                    <div className="text-xl text-blue-400">((●))</div>
+                    <h2 className="text-2xl font-semibold text-white">Research</h2>
+                </div>
+                <div className="bg-[#0f1118] border border-[#1e2738] rounded-lg overflow-hidden">
+                    {/* Table Header */}
+                    <div className="grid grid-cols-12 gap-4 px-4 py-3 border-b border-[#1e2738] bg-[#0a0d14]">
+                        <div className="col-span-5 text-xs font-semibold text-gray-400 uppercase">Title</div>
+                        <div className="col-span-2 text-xs font-semibold text-gray-400 uppercase">Author</div>
+                        <div className="col-span-2 text-xs font-semibold text-gray-400 uppercase">Published</div>
+                        <div className="col-span-3 text-xs font-semibold text-gray-400 uppercase">Tags</div>
+                    </div>
+                    {/* Table Body */}
+                    {loading ? (
+                        <div className="text-center py-12 text-gray-500">Loading research...</div>
+                    ) : latestReports.length === 0 ? (
+                        <div className="text-center py-12 text-gray-500">No research found</div>
+                    ) : (
+                        <div className="divide-y divide-[#1e2738]">
+                            {latestReports.map((item) => (
+                                <div
+                                    key={item.id}
+                                    className="grid grid-cols-12 gap-4 px-4 py-4 hover:bg-[#1a2332] transition-colors cursor-pointer"
+                                    onClick={() => window.open(`/research/${item.id}`, '_blank')}
+                                >
+                                    {/* Title */}
+                                    <div className="col-span-5">
+                                        <h3 className="text-sm font-semibold text-white mb-1 line-clamp-2">
+                                            {item.title}
+                                        </h3>
+                                    </div>
+                                    {/* Author */}
+                                    <div className="col-span-2 flex items-center">
+                                        <span className="text-sm text-gray-300">{item.author || 'Unknown'}</span>
+                                    </div>
+                                    {/* Published */}
+                                    <div className="col-span-2 flex items-center">
+                                        <span className="text-sm text-gray-400">
+                                            {item.publishedAt
+                                                ? new Date(item.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                                                : new Date(item.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                        </span>
+                                    </div>
+                                    {/* Tags */}
+                                    <div className="col-span-3 flex items-center gap-2 flex-wrap">
+                                        {Array.isArray(item.tags) && item.tags.length > 0 ? (
+                                            item.tags.map((tag: string, idx: number) => (
+                                                <span
+                                                    key={idx}
+                                                    className="px-2 py-1 rounded-full bg-violet-500/20 text-xs text-violet-300 border border-violet-500/30"
+                                                >
+                                                    {tag}
+                                                </span>
+                                            ))
+                                        ) : typeof item.tags === 'string' && item.tags.trim() ? (
+                                            item.tags.split(',').map((tag, idx) => (
+                                                <span
+                                                    key={idx}
+                                                    className="px-2 py-1 rounded-full bg-violet-500/20 text-xs text-violet-300 border border-violet-500/30"
+                                                >
+                                                    {tag.trim()}
+                                                </span>
+                                            ))
+                                        ) : (
+                                            <span className="text-xs text-gray-500">-</span>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
 
             <NewsDetailPanel selectedNews={selectedNews} onClose={() => setSelectedNews(null)} />
+        </div>
         </div>
     )
 }
