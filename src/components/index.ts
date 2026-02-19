@@ -14,6 +14,17 @@ export { NewsDetailPanel } from "./NewsDetailPanel"
 export { DailyRecapDetailPanel } from "./DailyRecapDetailPanel"
 export { MultiSelectDropdown } from "./MultiSelectDropdown"
 export { LoadingState, EmptyState } from "./StateIndicators"
+export { CompactMetricCard } from "./CompactMetricCard"
+
+// Chart components
+export { 
+  TradingViewWidget, 
+  formatTradingViewSymbol,
+  mapExchangeToTradingView,
+  EXCHANGES, 
+  QUOTE_CURRENCIES,
+  type TradingViewWidgetProps 
+} from "./TradingViewWidget"
 
 // Card components
 export { PlaceholderCard } from "./PlaceholderCard"

@@ -1,41 +1,16 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useState, useRef, useEffect } from "react"
-import { ChevronDown, Search, TrendingUp, Eye, Layers, Globe, X, Plus, Maximize2, Download } from "lucide-react"
+import { useNavigate } from "react-router-dom"
+import { ChevronDown, Search, TrendingUp, Eye, Layers, Globe, X, Plus, Maximize2, Download, RotateCcw, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts"
 import { useCoinGecko, type TimeRange } from "@/contexts"
-
-// Crypto metadata with colors
-const cryptoMeta: Record<string, { name: string; color: string }> = {
-  bitcoin: { name: "Bitcoin", color: "#f7931a" },
-  ethereum: { name: "Ethereum", color: "#627eea" },
-  tether: { name: "Tether", color: "#26a17b" },
-  ripple: { name: "XRP", color: "#00aae4" },
-  binancecoin: { name: "BNB", color: "#f3ba2f" },
-  "usd-coin": { name: "USDC", color: "#2775ca" },
-  solana: { name: "Solana", color: "#9945ff" },
-  tron: { name: "TRON", color: "#ff0013" },
-  dogecoin: { name: "Dogecoin", color: "#c3a634" },
-  "bitcoin-cash": { name: "Bitcoin Cash", color: "#8dc351" },
-  cardano: { name: "Cardano", color: "#0033ad" },
-}
-
-// Map CoinGecko ID to symbol
-const coinIdToSymbol: Record<string, string> = {
-  bitcoin: "BTC",
-  ethereum: "ETH",
-  tether: "USDT",
-  ripple: "XRP",
-  binancecoin: "BNB",
-  "usd-coin": "USDC",
-  solana: "SOL",
-  tron: "TRX",
-  dogecoin: "DOGE",
-  "bitcoin-cash": "BCH",
-  cardano: "ADA",
-}
+import { formatCompactNumber, formatCurrency } from "@/lib/format"
+import { stringToColor } from "@/lib/helpers"
 
 type FilterCategory = "Top Assets" | "Watchlists" | "Sectors" | "Ecosystems"
 type FilterOption = "Top 100" | "Gainers" | "Losers"
+type SortField = "rank" | "price" | "change" | "mcap"
+type SortOrder = "asc" | "desc"
 
 const filterCategories: { category: FilterCategory; icon: React.ReactNode; options?: FilterOption[] }[] = [
   { category: "Top Assets", icon: <TrendingUp className="h-3.5 w-3.5" />, options: ["Top 100", "Gainers", "Losers"] },
@@ -66,6 +41,8 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
     setTimeRange,
   } = useCoinGecko()
 
+  const navigate = useNavigate()
+
   // Local UI state
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [selectedFilter, setSelectedFilter] = useState<FilterOption>("Top 100")
@@ -75,6 +52,21 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
   const [showPercentage, setShowPercentage] = useState(false)
   const [showVolume, setShowVolume] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Sorting state
+  const [sortField, setSortField] = useState<SortField>("rank")
+  const [sortOrder, setSortOrder] = useState<SortOrder>("asc")
+
+  // Pagination state - 100 items per page for Top 100, Next 100, etc.
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 100
+
+  // Zoom and pan state
+  const [zoomLevel, setZoomLevel] = useState(1)
+  const [panOffset, setPanOffset] = useState(0)
+  const [isPanning, setIsPanning] = useState(false)
+  const [panStart, setPanStart] = useState<{ x: number; offset: number } | null>(null)
+  const chartContainerRef = useRef<HTMLDivElement>(null)
 
   // Rename for component consistency
   const isLoading = isLoadingMarkets
@@ -92,6 +84,39 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
+
+  // Get time range label for table header
+  const getTimeRangeLabel = () => {
+    switch (timeRange) {
+      case "1D": return "24h"
+      case "7D": return "1W"
+      case "30D": return "1M"
+      case "90D": return "3M"
+      case "1Y": return "1Y"
+      case "Max": return "All"
+      default: return "1W"
+    }
+  }
+
+  // Get appropriate price change percentage based on timeRange
+  const getPriceChangeForTimeRange = (coin: typeof marketData[0]) => {
+    switch (timeRange) {
+      case "1D":
+        return coin.price_change_percentage_24h_in_currency ?? coin.price_change_percentage_24h ?? 0
+      case "7D":
+        return coin.price_change_percentage_7d_in_currency ?? 0
+      case "30D":
+        return coin.price_change_percentage_30d_in_currency ?? 0
+      case "90D":
+        return coin.price_change_percentage_200d_in_currency ?? 0
+      case "1Y":
+      case "Max":
+        return coin.price_change_percentage_1y_in_currency ?? 0
+      default:
+        return coin.price_change_percentage_7d_in_currency ?? 0
+    }
+  }
+
   // Filter data based on search and selected filter
   const filteredData = marketData.filter((coin) => {
     const matchesSearch = coin.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -99,10 +124,92 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
 
     if (!matchesSearch) return false
 
-    if (selectedFilter === "Gainers") return (coin.price_change_percentage_7d_in_currency || 0) > 0
-    if (selectedFilter === "Losers") return (coin.price_change_percentage_7d_in_currency || 0) < 0
+    const priceChange = getPriceChangeForTimeRange(coin)
+    if (selectedFilter === "Gainers") return priceChange > 0
+    if (selectedFilter === "Losers") return priceChange < 0
     return true // Top 100
   })
+
+  // Sort the filtered data
+  const sortedData = [...filteredData].sort((a, b) => {
+    let comparison = 0
+
+    switch (sortField) {
+      case "rank":
+        comparison = (a.market_cap_rank || 9999) - (b.market_cap_rank || 9999)
+        break
+      case "price":
+        comparison = a.current_price - b.current_price
+        break
+      case "change":
+        comparison = getPriceChangeForTimeRange(a) - getPriceChangeForTimeRange(b)
+        break
+      case "mcap":
+        comparison = a.market_cap - b.market_cap
+        break
+    }
+
+    return sortOrder === "asc" ? comparison : -comparison
+  })
+
+  // Pagination calculations
+  const totalPages = Math.ceil(sortedData.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const paginatedData = sortedData.slice(startIndex, endIndex)
+  console.log("Paginated data length:", paginatedData)
+
+  // Get page label (Top 100, Next 100, etc.)
+  const getPageLabel = (pageNum: number) => {
+    if (pageNum === 1) return "Top 100"
+    return `${(pageNum - 1) * 100 + 1}-${Math.min(pageNum * 100, sortedData.length)}`
+  }
+
+  // Reset to page 1 when filter, search, or sort changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [selectedFilter, searchQuery, sortField, sortOrder])
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page)
+    }
+  }
+
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = []
+    const maxVisible = 5
+
+    if (totalPages <= maxVisible) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1)
+    }
+
+    // Always show first page
+    pages.push(1)
+
+    if (currentPage > 3) {
+      pages.push("...")
+    }
+
+    // Show pages around current page
+    const start = Math.max(2, currentPage - 1)
+    const end = Math.min(totalPages - 1, currentPage + 1)
+
+    for (let i = start; i <= end; i++) {
+      pages.push(i)
+    }
+
+    if (currentPage < totalPages - 2) {
+      pages.push("...")
+    }
+
+    // Always show last page
+    if (totalPages > 1) {
+      pages.push(totalPages)
+    }
+
+    return pages
+  }
 
   const handleFilterSelect = (option: FilterOption) => {
     setSelectedFilter(option)
@@ -117,19 +224,28 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
     toggleAsset(coinId)
   }
 
-  // Format price for display
-  const formatPrice = (price: number) => {
-    if (price >= 1000) return `$${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-    if (price >= 1) return `$${price.toFixed(2)}`
-    if (price >= 0.01) return `$${price.toFixed(4)}`
-    return `$${price.toFixed(6)}`
+  // Handle column sorting
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      // Toggle order if clicking same field
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+    } else {
+      // Set new field with default order
+      setSortField(field)
+      setSortOrder(field === "rank" ? "asc" : "desc") // Rank defaults to asc, others to desc
+    }
   }
 
-  // Format market cap for display
-  const formatMarketCap = (mcap: number) => {
-    if (mcap >= 1e12) return `$${(mcap / 1e12).toFixed(2)}T`
-    if (mcap >= 1e9) return `$${(mcap / 1e9).toFixed(2)}B`
-    return `$${(mcap / 1e6).toFixed(2)}M`
+  // Get sort icon component
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="h-3 w-3 text-gray-600" />
+    }
+    return sortOrder === "asc" ? (
+      <ArrowUp className="h-3 w-3 text-blue-400" />
+    ) : (
+      <ArrowDown className="h-3 w-3 text-blue-400" />
+    )
   }
 
   // Prepare chart data
@@ -215,6 +331,70 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
     }
   }
 
+  // Zoom and pan handlers
+  const resetZoom = () => {
+    setZoomLevel(1)
+    setPanOffset(0)
+  }
+
+  const handleWheel = (e: WheelEvent) => {
+    e.preventDefault()
+    const delta = e.deltaY > 0 ? 0.9 : 1.1
+    setZoomLevel((prev) => Math.max(1, Math.min(10, prev * delta)))
+  }
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsPanning(true)
+    setPanStart({ x: e.clientX, offset: panOffset })
+  }
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isPanning && panStart) {
+      const deltaX = e.clientX - panStart.x
+      const panSpeed = 0.5
+      const maxPan = preparedChartData.length * (zoomLevel - 1) / 2
+      const newOffset = Math.max(-maxPan, Math.min(maxPan, panStart.offset - deltaX * panSpeed))
+      setPanOffset(newOffset)
+    }
+  }
+
+  const handleMouseUp = () => {
+    setIsPanning(false)
+    setPanStart(null)
+  }
+
+  // Calculate visible data range based on zoom and pan
+  const getVisibleDataRange = () => {
+    const dataLength = preparedChartData.length
+    if (zoomLevel === 1) return { start: 0, end: dataLength }
+
+    const visibleCount = Math.floor(dataLength / zoomLevel)
+    const center = dataLength / 2 + panOffset
+    const start = Math.max(0, Math.floor(center - visibleCount / 2))
+    const end = Math.min(dataLength, Math.ceil(center + visibleCount / 2))
+
+    return { start, end }
+  }
+
+  const { start, end } = getVisibleDataRange()
+  const displayData = preparedChartData.slice(start, end)
+
+  // Add wheel event listener
+  useEffect(() => {
+    const container = chartContainerRef.current
+    if (!container) return
+
+    const wheelHandler = (e: WheelEvent) => handleWheel(e)
+    container.addEventListener('wheel', wheelHandler, { passive: false })
+
+    return () => container.removeEventListener('wheel', wheelHandler)
+  }, [zoomLevel])
+
+  // Reset zoom when time range changes
+  useEffect(() => {
+    resetZoom()
+  }, [timeRange, selectedAssets])
+
   return (
     <Card className="bg-[#0f1118] border-[#1e2738] h-full py-0 flex flex-col">
       <CardHeader className="pb-2 pt-4 px-4 border-[#1e2738] bg-[#181b28] rounded-t-xl shrink-0">
@@ -286,24 +466,48 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
               <thead className="sticky top-0 bg-[#0f1118] z-20 border-b-2 border-[#1e2738]">
                 <tr className="text-gray-500 border-b border-[#1e2738]">
 
-                  <th className="w-8 px-2 py-2 text-left font-normal">
-                    #
+                  <th
+                    className="w-8 px-2 py-2 text-left font-normal cursor-pointer hover:text-gray-300 transition-colors group"
+                    onClick={() => handleSort("rank")}
+                  >
+                    <div className="flex items-center gap-1">
+                      <span>#</span>
+                      {getSortIcon("rank")}
+                    </div>
                   </th>
 
                   <th className="w-17.5 text-left px-2 py-2 font-normal">
                     Asset
                   </th>
 
-                  <th className="w-17.5 px-2 py-2 text-right font-normal">
-                    Price
+                  <th
+                    className="w-17.5 px-2 py-2 text-right font-normal cursor-pointer hover:text-gray-300 transition-colors group"
+                    onClick={() => handleSort("price")}
+                  >
+                    <div className="flex items-center justify-end gap-1">
+                      <span>Price</span>
+                      {getSortIcon("price")}
+                    </div>
                   </th>
 
-                  <th className="w-15 px-2 py-2 text-right font-normal">
-                    1W
+                  <th
+                    className="w-15 px-2 py-2 text-right font-normal cursor-pointer hover:text-gray-300 transition-colors group"
+                    onClick={() => handleSort("change")}
+                  >
+                    <div className="flex items-center justify-end gap-1">
+                      <span>{getTimeRangeLabel()}</span>
+                      {getSortIcon("change")}
+                    </div>
                   </th>
 
-                  <th className="w-17.5 px-2 py-2 text-right font-normal">
-                    Mcap
+                  <th
+                    className="w-17.5 px-2 py-2 text-right font-normal cursor-pointer hover:text-gray-300 transition-colors group"
+                    onClick={() => handleSort("mcap")}
+                  >
+                    <div className="flex items-center justify-end gap-1">
+                      <span>Mcap</span>
+                      {getSortIcon("mcap")}
+                    </div>
                   </th>
 
                 </tr>
@@ -339,16 +543,14 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
 
 
                 {/* Data Rows */}
-                {!isLoading && !error && filteredData.map((coin) => {
+                {!isLoading && !error && paginatedData.map((coin) => {
+                  console.log("Rendering row for:", coin, paginatedData[0])
 
-                  const symbol =
-                    coinIdToSymbol[coin.id] || coin.symbol.toUpperCase()
+                  const symbol = coin.symbol.toUpperCase()
 
-                  const color =
-                    cryptoMeta[coin.id]?.color || "#888888"
+                  const color = stringToColor(coin.id)
 
-                  const changePercent =
-                    coin.price_change_percentage_7d_in_currency || 0
+                  const changePercent = getPriceChangeForTimeRange(coin)
 
                   const positive = changePercent >= 0
 
@@ -359,7 +561,6 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                   return (
                     <tr
                       key={coin.id}
-                      onClick={() => toggleAssetSelection(coin.id)}
                       className={`
                 cursor-pointer transition-colors
                 ${selected
@@ -370,14 +571,21 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                     >
 
                       {/* Rank */}
-                      <td className="px-2 py-2.5 text-gray-500">
+                      <td
+                        className="px-2 py-2.5 text-gray-500"
+                        onClick={() => toggleAssetSelection(coin.id)}
+                      >
                         {coin.market_cap_rank || "-"}
                       </td>
 
 
-                      {/* Asset */}
-                      <td className="px-2 py-2.5 text-white font-medium">
-                        <div className="flex items-center gap-2">
+                      {/* Asset - Make clickable to navigate to detail page */}
+                      <td
+                        className="px-2 py-2.5 text-white font-medium group"
+                        onClick={() => toggleAssetSelection(coin.id)}
+                        title="Click to view details"
+                      >
+                        <div className="flex items-center gap-2 group-hover:text-blue-400 transition-colors">
 
                           {coin.image ? (
                             <img
@@ -397,10 +605,10 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
 
                           <button
                             onClick={(e) => {
-                              e.stopPropagation()
+                              navigate(`/coin/${coin.id}`)
                               onAssetClick?.(coin.id)
                             }}
-                            className="hover:text-blue-400 hover:underline transition-colors"
+                            className="hover:text-blue-400 hover:underline transition-colors border-none!"
                           >
                             {symbol}
                           </button>
@@ -409,26 +617,36 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
 
 
                       {/* Price */}
-                      <td className="px-2 py-2.5 text-white text-right">
-                        {formatPrice(coin.current_price)}
+                      <td
+                        className="px-2 py-2.5 text-white text-right group relative cursor-pointer"
+                        onClick={() => toggleAssetSelection(coin.id)}
+                        title={`24h High: ${formatCurrency(coin.high_24h)}\n24h Low: ${formatCurrency(coin.low_24h)}\nATH: ${formatCurrency(coin.ath)}\nATL: ${formatCurrency(coin.atl)}`}
+                      >
+                        {formatCurrency(coin.current_price)}
                       </td>
 
 
-                      {/* 1W */}
+                      {/* Price Change % */}
                       <td
                         className={`px-2 py-2.5 text-right ${positive
                           ? "text-green-400"
                           : "text-red-400"
                           }`}
+                        onClick={() => toggleAssetSelection(coin.id)}
+                        title={`${getTimeRangeLabel()} Change: ${positive ? "+" : ""}${changePercent?.toFixed(2)}%\n24h Change: ${coin.price_change_percentage_24h >= 0 ? "+" : ""}${coin.price_change_percentage_24h?.toFixed(2)}%`}
                       >
                         {positive ? "+" : ""}
-                        {changePercent.toFixed(2)}%
+                        {changePercent?.toFixed(2)}%
                       </td>
 
 
                       {/* Market Cap */}
-                      <td className="px-2 py-2.5 text-blue-400 text-right">
-                        {formatMarketCap(coin.market_cap)}
+                      <td
+                        className="px-2 py-2.5 text-blue-400 text-right"
+                        onClick={() => toggleAssetSelection(coin.id)}
+                        title={`Market Cap: ${formatCompactNumber(coin.market_cap, 2)}\n24h Volume: ${formatCompactNumber(coin.total_volume, 2)}\nCirculating: ${coin.circulating_supply.toLocaleString()} ${symbol}\n${coin.max_supply ? `Max Supply: ${coin.max_supply.toLocaleString()} ${symbol}` : 'No Max Supply'}`}
+                      >
+                        {formatCompactNumber(coin.market_cap, 2)}
                       </td>
 
                     </tr>
@@ -439,6 +657,72 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
             </table>
 
           </div>
+
+          {/* Pagination Controls */}
+          {!isLoading && !error && sortedData.length > 0 && (
+            <div className="px-3 py-2 border-t border-[#1e2738] flex items-center justify-between shrink-0 bg-[#0f1118]">
+              {/* <div className="text-xs text-gray-400">
+                Showing {startIndex + 1}-{Math.min(endIndex, sortedData.length)} of {sortedData.length}
+              </div> */}
+
+              <div className="flex items-center gap-2">
+                {/* Current Page Label */}
+                <span className="text-xs text-white font-medium px-2 py-1 bg-[#1a2332] rounded">
+                  {getPageLabel(currentPage)}
+                </span>
+
+                {/* Previous Button */}
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className={`p-1.5 rounded transition-colors ${currentPage === 1
+                      ? "text-gray-600 cursor-not-allowed"
+                      : "text-gray-400 hover:bg-[#1a2332] hover:text-white"
+                    }`}
+                  title="Previous 100"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+
+                {/* Page Numbers */}
+                {getPageNumbers().map((page, idx) => (
+                  typeof page === "number" ? (
+                    <button
+                      key={idx}
+                      onClick={() => handlePageChange(page)}
+                      className={`min-w-7 h-7 px-2 rounded text-xs transition-colors ${currentPage === page
+                          ? "bg-blue-600 text-white"
+                          : "text-gray-400 hover:bg-[#1a2332] hover:text-white"
+                        }`}
+                    >
+                      {page}
+                    </button>
+                  ) : (
+                    <span key={idx} className="px-2 text-gray-600 text-xs">
+                      {page}
+                    </span>
+                  )
+                ))}
+
+                {/* Next Button */}
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className={`p-1.5 rounded transition-colors ${currentPage === totalPages
+                      ? "text-gray-600 cursor-not-allowed"
+                      : "text-gray-400 hover:bg-[#1a2332] hover:text-white"
+                    }`}
+                  title="Next 100"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="text-xs text-gray-400">
+                Page {currentPage} of {totalPages}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Chart Section */}
@@ -538,6 +822,21 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                 </button>
               )}
 
+              <div className="w-px h-4 bg-[#2a3548] mx-1" />
+
+              {/* Zoom controls */}
+              <button
+                onClick={resetZoom}
+                disabled={zoomLevel === 1}
+                className={`p-1.5 rounded transition-colors ${zoomLevel > 1
+                  ? "text-blue-400 hover:bg-[#1a2332] hover:text-blue-300"
+                  : "text-gray-600 cursor-not-allowed"
+                  }`}
+                title={`Reset zoom${zoomLevel > 1 ? ` (${zoomLevel.toFixed(1)}x)` : ""}`}
+              >
+                <RotateCcw className="w-4 h-4" />
+              </button>
+
               {/* Additional actions */}
               <button
                 className="p-1.5 rounded text-gray-400 hover:bg-[#1a2332] hover:text-white transition-colors"
@@ -557,8 +856,9 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
           {/* Selected Assets Tags */}
           <div className="flex items-center gap-2 px-3 py-2 border-b border-[#1e2738] shrink-0 flex-wrap">
             {selectedAssets.map((coinId) => {
-              const symbol = coinIdToSymbol[coinId] || coinId.toUpperCase()
-              const color = cryptoMeta[coinId]?.color || "#888888"
+              const coin = marketData.find(c => c.id === coinId)
+              const symbol = coin?.symbol.toUpperCase() || coinId.toUpperCase()
+              const color = stringToColor(coinId)
 
               return (
                 <span
@@ -600,9 +900,19 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                 </div>
               </div>
             ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                {chartType === "line" ? (
-                  <LineChart data={preparedChartData} margin={{ top: 20, right: 80, left: 10, bottom: 20 }}>
+              <div
+                ref={chartContainerRef}
+                className={`w-full h-full ${isPanning ? 'cursor-grabbing' : 'cursor-grab'}`}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+              >
+                <ResponsiveContainer width="100%" height="100%">{chartType === "line" ? (
+                  <LineChart
+                    data={displayData}
+                    margin={{ top: 20, right: 80, left: 10, bottom: 20 }}
+                  >
                     <CartesianGrid strokeDasharray="3 3" stroke="#2a3548" vertical={false} />
                     <XAxis
                       dataKey="date"
@@ -635,7 +945,8 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                             <p className="text-white text-xs font-medium mb-2">{dateFull}</p>
                             {payload.map((entry: any) => {
                               const coinId = entry.dataKey
-                              const symbol = coinIdToSymbol[coinId] || coinId.toUpperCase()
+                              const coin = marketData.find(c => c.id === coinId)
+                              const symbol = coin?.symbol.toUpperCase() || coinId.toUpperCase()
                               const color = entry.stroke || entry.fill
                               const value = entry.value
 
@@ -648,7 +959,7 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                                   <span className="text-white font-medium">
                                     {showPercentage
                                       ? `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`
-                                      : formatPrice(value)
+                                      : formatCurrency(value)
                                     }
                                   </span>
                                 </div>
@@ -663,7 +974,7 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                         key={coinId}
                         type="monotone"
                         dataKey={coinId}
-                        stroke={cryptoMeta[coinId]?.color || "#888"}
+                        stroke={stringToColor(coinId)}
                         strokeWidth={2.5}
                         dot={false}
                         activeDot={{ r: 5, strokeWidth: 2 }}
@@ -672,10 +983,13 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                     ))}
                   </LineChart>
                 ) : chartType === "area" ? (
-                  <AreaChart data={preparedChartData} margin={{ top: 20, right: 80, left: 10, bottom: 20 }}>
+                  <AreaChart
+                    data={displayData}
+                    margin={{ top: 20, right: 80, left: 10, bottom: 20 }}
+                  >
                     <defs>
                       {selectedAssets.map((coinId) => {
-                        const color = cryptoMeta[coinId]?.color || "#888"
+                        const color = stringToColor(coinId)
                         return (
                           <linearGradient key={`gradient-${coinId}`} id={`gradient-${coinId}`} x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor={color} stopOpacity={0.3} />
@@ -716,7 +1030,8 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                             <p className="text-white text-xs font-medium mb-2">{dateFull}</p>
                             {payload.map((entry: any) => {
                               const coinId = entry.dataKey
-                              const symbol = coinIdToSymbol[coinId] || coinId.toUpperCase()
+                              const coin = marketData.find(c => c.id === coinId)
+                              const symbol = coin?.symbol.toUpperCase() || coinId.toUpperCase()
                               const color = entry.stroke || entry.fill
                               const value = entry.value
 
@@ -729,7 +1044,7 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                                   <span className="text-white font-medium">
                                     {showPercentage
                                       ? `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`
-                                      : formatPrice(value)
+                                      : formatCurrency(value)
                                     }
                                   </span>
                                 </div>
@@ -744,7 +1059,7 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                         key={coinId}
                         type="monotone"
                         dataKey={coinId}
-                        stroke={cryptoMeta[coinId]?.color || "#888"}
+                        stroke={stringToColor(coinId)}
                         strokeWidth={2.5}
                         fill={`url(#gradient-${coinId})`}
                         dot={false}
@@ -754,7 +1069,10 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                     ))}
                   </AreaChart>
                 ) : (
-                  <BarChart data={preparedChartData} margin={{ top: 20, right: 80, left: 10, bottom: 20 }}>
+                  <BarChart
+                    data={displayData}
+                    margin={{ top: 20, right: 80, left: 10, bottom: 20 }}
+                  >
                     <CartesianGrid strokeDasharray="3 3" stroke="#2a3548" vertical={false} />
                     <XAxis
                       dataKey="date"
@@ -787,7 +1105,8 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                             <p className="text-white text-xs font-medium mb-2">{dateFull}</p>
                             {payload.map((entry: any) => {
                               const coinId = entry.dataKey
-                              const symbol = coinIdToSymbol[coinId] || coinId.toUpperCase()
+                              const coin = marketData.find(c => c.id === coinId)
+                              const symbol = coin?.symbol.toUpperCase() || coinId.toUpperCase()
                               const color = entry.fill
                               const value = entry.value
 
@@ -800,7 +1119,7 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                                   <span className="text-white font-medium">
                                     {showPercentage
                                       ? `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`
-                                      : formatPrice(value)
+                                      : formatCurrency(value)
                                     }
                                   </span>
                                 </div>
@@ -814,7 +1133,7 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                       <Bar
                         key={coinId}
                         dataKey={coinId}
-                        fill={cryptoMeta[coinId]?.color || "#888"}
+                        fill={stringToColor(coinId)}
                         opacity={0.8}
                         animationDuration={800}
                         radius={[4, 4, 0, 0]}
@@ -822,15 +1141,17 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                     ))}
                   </BarChart>
                 )}
-              </ResponsiveContainer>
+                </ResponsiveContainer>
+              </div>
             )}
 
             {/* Chart Statistics/Legend */}
             {selectedAssets.length > 0 && !isChartLoading && (
               <div className="absolute right-4 top-4 flex flex-col gap-2">
                 {selectedAssets.map((coinId) => {
-                  const symbol = coinIdToSymbol[coinId] || coinId.toUpperCase()
-                  const color = cryptoMeta[coinId]?.color || "#888888"
+                  const coin = marketData.find(c => c.id === coinId)
+                  const symbol = coin?.symbol.toUpperCase() || coinId.toUpperCase()
+                  const color = stringToColor(coinId)
                   const change = getAssetChange(coinId)
 
                   // Get current value from chart data
@@ -851,7 +1172,7 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                         <span className="text-white text-xs font-semibold">{symbol}</span>
                       </div>
                       <div className="text-white text-sm font-bold pl-4">
-                        {formatPrice(currentValue)}
+                        {formatCurrency(currentValue)}
                       </div>
                       <div className={`text-xs pl-4 font-medium ${change.positive ? "text-green-400" : "text-red-400"}`}>
                         {change.value}
@@ -867,6 +1188,13 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
               <span>Powered by</span>
               <span className="font-semibold">CoinGecko</span>
             </div>
+
+            {/* Zoom hint */}
+            {zoomLevel === 1 && selectedAssets.length > 0 && !isChartLoading && (
+              <div className="absolute bottom-2 left-4 text-gray-600 text-xs opacity-40 flex items-center gap-1">
+                <span>💡 Scroll to zoom, drag to pan</span>
+              </div>
+            )}
           </div>
         </div>
       </CardContent>
