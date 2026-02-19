@@ -1,6 +1,6 @@
 import { ExternalLink, User, Globe, Link2 } from "lucide-react"
-import { getSentimentClasses } from "@/lib/format"
 import type { NewsItem } from "@/types/news"
+import { formatTimeAgo, getSentimentClasses } from "@/lib/format"
 
 interface NewsDetailPanelProps {
   selectedNews: NewsItem | null
@@ -9,6 +9,7 @@ interface NewsDetailPanelProps {
 
 export function NewsDetailPanel({ selectedNews, onClose }: NewsDetailPanelProps) {
   if (!selectedNews) return null
+  console.log(selectedNews)
 
   return (
     <>
@@ -19,7 +20,7 @@ export function NewsDetailPanel({ selectedNews, onClose }: NewsDetailPanelProps)
       />
 
       {/* Right-side detail panel */}
-      <div className="fixed inset-y-0 right-0 w-1/2 bg-[#0d1421] border-l border-[#1e2738] z-50 flex flex-col shadow-2xl animate-in slide-in-from-right duration-300">
+      <div className="fixed inset-y-0 right-0 w-1/2 bg-[#13151e] border-l border-[#1e2738] z-50 flex flex-col shadow-2xl animate-in slide-in-from-right duration-300">
         {/* Close button */}
         <button
           type="button"
@@ -35,7 +36,7 @@ export function NewsDetailPanel({ selectedNews, onClose }: NewsDetailPanelProps)
             {/* Thumbnail Image */}
             <div className="shrink-0">
               {selectedNews.imageUrl ? (
-                <div className="w-48 h-24 rounded-lg overflow-hidden bg-[#1a2332] border border-[#2a3548]">
+                <div className="w-56 h-32 rounded-lg overflow-hidden bg-[#1a2332] border border-[#2a3548]">
                   <img
                     src={selectedNews.imageUrl}
                     alt={selectedNews.title}
@@ -58,7 +59,7 @@ export function NewsDetailPanel({ selectedNews, onClose }: NewsDetailPanelProps)
             <div className="flex-1 min-w-0">
 
               {/* Title */}
-              <h2 className="text-lg font-bold leading-tight text-white line-clamp-2">
+              <h2 className="text-xl font-bold leading-tight text-white line-clamp-2 mb-2">
                 {selectedNews.title}
               </h2>
 
@@ -110,14 +111,16 @@ export function NewsDetailPanel({ selectedNews, onClose }: NewsDetailPanelProps)
 
           {/* Engagement Stats */}
           <div className="flex items-center gap-3 mt-4 pt-3 border-t border-[#1e2738]">
-            <div className="text-xs text-gray-500 bg-[#1a2332] px-2 py-1 rounded">
+            {/* <div className="text-xs text-gray-500 bg-[#1a2332] px-2 py-1 rounded">
               Score: <span className="text-white font-medium">{selectedNews.score}</span>
-            </div>
+            </div> */}
+            <span className="text-sm text-gray-200">{formatTimeAgo(selectedNews.publishedOn)}</span>
+            <span className="text-gray-200">•</span>
             <a
               href={selectedNews.url}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-1.5 text-xs text-violet-400 hover:text-violet-300 transition-colors bg-violet-500/10 px-3 py-1.5 rounded-full border border-violet-500/30 hover:border-violet-500/50"
+              className="flex items-center gap-1.5 text-xs text-blue-400! hover:text-blue-300 transition-colors bg-blue-500/10 px-3 py-1.5 rounded-full border border-blue-400/30 hover:border-blue-400/50"
             >
               <Link2 className="h-3.5 w-3.5" />
               <span>Read Full Article</span>
@@ -131,7 +134,7 @@ export function NewsDetailPanel({ selectedNews, onClose }: NewsDetailPanelProps)
           {/* Summary Section */}
           <div className="space-y-3">
             <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-              <span className="w-1 h-4 bg-violet-500 rounded-full" />
+              <span className="w-1 h-4 bg-blue-400! rounded-full" />
               Summary
             </h3>
             <p className="text-sm leading-relaxed text-gray-300 whitespace-pre-line">
@@ -179,7 +182,7 @@ export function NewsDetailPanel({ selectedNews, onClose }: NewsDetailPanelProps)
           {selectedNews.categoryData?.length > 0 && (
             <div className="space-y-3">
               <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-                <span className="w-1 h-4 bg-violet-500 rounded-full" />
+                <span className="w-1 h-4 bg-blue-400! rounded-full" />
                 All Categories
               </h3>
               <div className="flex flex-wrap gap-2">

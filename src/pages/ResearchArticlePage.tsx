@@ -248,7 +248,7 @@ export function ResearchArticlePage() {
         <div className="mt-12 pt-6 border-t border-[#1e2738]">
           <div className="flex items-center justify-between text-sm text-gray-500">
             <div>
-              <span>Source: {article.source}</span>
+                <span>Source: {article.source ? article.source.charAt(0).toUpperCase() + article.source.slice(1) : ""}</span>
             </div>
             <div>
               <span>Published: {formattedDate}</span>
