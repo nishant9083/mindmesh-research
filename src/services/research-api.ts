@@ -27,11 +27,11 @@ export async function fetchResearchArticles(): Promise<ResearchItem[]> {
  */
 export async function fetchResearchArticleById(id: string): Promise<ResearchItem | null> {
   try {
-    const { data } = await axios.get<ResearchItem>(`${RESEARCH_URL}/${id}`);
-    if (!data) {
+    const { data: response } = await axios.get<{ success: boolean; data: ResearchItem }>(`${RESEARCH_URL}/${id}`);
+    if (!response?.success || !response?.data) {
       return null;
     }
-    return data;
+    return response.data;
   } catch (error) {
     console.error(`Error fetching research article ${id}:`, error);
     return null;

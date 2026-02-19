@@ -15,8 +15,8 @@ export function ResearchArticlePage() {
       
       try {
         setLoading(true)
-        const data = await fetchResearchArticleById(id)
-        setArticle(data)
+        const article = await fetchResearchArticleById(id)
+        setArticle(article)
       } catch (error) {
         console.error("Failed to fetch article:", error)
       } finally {
@@ -76,12 +76,14 @@ export function ResearchArticlePage() {
             >
               ← Back
             </button>
-            <span className="px-3 py-1 bg-blue-400/20 text-blue-100 text-xs rounded">
-              DeFi
-            </span>
-            <span className="px-3 py-1 bg-blue-400/20 text-blue-100 text-xs rounded">
-              Layer-1
-            </span>
+            {Array.isArray(article.tags) && article.tags.length > 0 && article.tags.map((tag, idx) => (
+              <span
+              key={idx}
+              className="px-3 py-1 bg-blue-400/20 text-blue-100 text-xs rounded"
+              >
+              {tag.charAt(0).toUpperCase() + tag.slice(1)}
+              </span>
+            ))}
           </div>
 
           {/* Title */}
@@ -107,14 +109,14 @@ export function ResearchArticlePage() {
               href={article.url} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white! text-sm rounded-lg transition-colors"
             >
               Read Original
             </a>
           </div>
 
           {/* Tags */}
-          {article.tags && (
+          {typeof article.tags === "string" && article.tags.trim() && (
             <div className="flex flex-wrap gap-2 mt-4">
               {article.tags.split(',').map((tag, index) => (
                 <span 
@@ -258,19 +260,27 @@ export function ResearchArticlePage() {
   )
 }
 
-// Helper function to calculate time ago
-function getTimeAgo(date: Date): string {
+// Helper function to calculate time ago from ISO string or Date
+function getTimeAgo(dateInput: string | Date): string {
+  const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput
+  if (isNaN(date.getTime())) return "Invalid date"
+
   const now = new Date()
   const diffMs = now.getTime() - date.getTime()
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+
+  const diffSeconds = Math.floor(diffMs / 1000)
+  const diffMinutes = Math.floor(diffSeconds / 60)
+  const diffHours = Math.floor(diffMinutes / 60)
   const diffDays = Math.floor(diffHours / 24)
 
-  if (diffHours < 1) {
+  if (diffSeconds < 60) {
     return "just now"
+  } else if (diffMinutes < 60) {
+    return `${diffMinutes} minute${diffMinutes !== 1 ? "s" : ""} ago`
   } else if (diffHours < 24) {
-    return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`
+    return `${diffHours} hour${diffHours !== 1 ? "s" : ""} ago`
   } else if (diffDays < 7) {
-    return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`
+    return `${diffDays} day${diffDays !== 1 ? "s" : ""} ago`
   } else {
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
   }
