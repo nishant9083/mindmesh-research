@@ -25,6 +25,7 @@ const trendingAssets = [
 export function ResearchPage() {
     const navigate = useNavigate()
     const [latestReports, setLatestReports] = useState<ResearchItem[]>([])
+    const [allReports, setAllReports] = useState<ResearchItem[]>([])
     const [newsletters, setNewsletters] = useState<NewsItem[]>([])
     const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null)
     const [loading, setLoading] = useState(true)
@@ -38,6 +39,7 @@ export function ResearchPage() {
                     fetchNews({})
                 ])
                 setLatestReports(reports.slice(0, 6)) // Get first 6 reports
+                setAllReports(reports);
                 setNewsletters(news.slice(0, 8)) // Get first 8 news items
             } catch (error) {
                 console.error("Failed to fetch research data:", error)
@@ -306,7 +308,7 @@ export function ResearchPage() {
                         <div className="text-center py-12 text-gray-500">No research found</div>
                     ) : (
                         <div className="divide-y divide-[#1e2738]">
-                            {latestReports.map((item) => (
+                            {allReports.map((item) => (
                                 <div
                                     key={item.id}
                                     className="grid grid-cols-12 gap-4 px-4 py-4 hover:bg-[#1a2332] transition-colors cursor-pointer"

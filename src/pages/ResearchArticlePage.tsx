@@ -100,8 +100,8 @@ export function ResearchArticlePage() {
               <h3 className="text-white font-semibold">{authorName}</h3>
               <div className="flex items-center gap-2 text-sm text-gray-400">
                 <span>{timeAgo}</span>
-                <span>·</span>
-                <span>{readTime}</span>
+                {/* <span>·</span> */}
+                {/* <span>{readTime}</span> */}
               </div>
             </div>
             {/* Read Original Button */}
