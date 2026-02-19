@@ -12,6 +12,7 @@ export { NewsCard } from "./NewsCard"
 export { NewsItemRow } from "./NewsItemRow"
 export { MultiSelectDropdown } from "./MultiSelectDropdown"
 export { LoadingState, EmptyState } from "./StateIndicators"
+export { CompactMetricCard } from "./CompactMetricCard"
 
 // Card components
 export { PlaceholderCard } from "./PlaceholderCard"

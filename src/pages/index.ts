@@ -8,3 +8,4 @@
  */
 
 export { Dashboard } from "./Dashboard"
+export { CoinDetailPage } from "./CoinDetail"

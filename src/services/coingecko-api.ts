@@ -1,4 +1,22 @@
 import axios from "axios"
+import type { 
+  CoinDetail, 
+  CoinTickerResponse, 
+  MarketChartRange,
+  SearchResponse,
+  TrendingResponse
+} from "@/types"
+
+// Re-export types for convenience
+export type { CoinDetail, CoinTickerResponse, SearchResponse, TrendingResponse }
+
+export interface OHLCData {
+  timestamp: number
+  open: number
+  high: number
+  low: number
+  close: number
+}
 
 const COINGECKO_BASE_URL = import.meta.env.VITE_API_COINGECKO_BASE_URL || "https://api.coingecko.com/api/v3"
 const COINGECKO_API_KEY = import.meta.env.VITE_API_COINGECKO_API_KEY
@@ -33,7 +51,12 @@ export interface CoinMarketData {
     percentage: number
   }
   last_updated: string
+  // Dynamic price change percentages based on requested time period
+  price_change_percentage_24h_in_currency?: number
   price_change_percentage_7d_in_currency?: number
+  price_change_percentage_30d_in_currency?: number
+  price_change_percentage_200d_in_currency?: number
+  price_change_percentage_1y_in_currency?: number
 }
 
 export interface CoinHistoricalData {
@@ -142,3 +165,256 @@ export async function getMultipleCoinCharts(
     throw error
   }
 }
+
+/**
+ * Fetch comprehensive data for a specific coin
+ * @param id - Coin ID (e.g., "bitcoin")
+ * @param params - Additional parameters
+ */
+export async function getCoinDetail(
+  id: string,
+  params?: {
+    localization?: boolean
+    tickers?: boolean
+    market_data?: boolean
+    community_data?: boolean
+    developer_data?: boolean
+    sparkline?: boolean
+  }
+): Promise<CoinDetail> {
+  const queryParams = {
+    localization: params?.localization ?? true,
+    tickers: params?.tickers ?? false,
+    market_data: params?.market_data ?? true,
+    community_data: params?.community_data ?? true,
+    developer_data: params?.developer_data ?? true,
+    sparkline: params?.sparkline ?? false,
+  }
+
+  try {
+    const response = await axios.get<CoinDetail>(
+      `${COINGECKO_BASE_URL}/coins/${id}`,
+      {
+        headers: {
+          "x-cg-demo-api-key": COINGECKO_API_KEY
+        },
+        params: queryParams
+      }
+    )
+    return response.data
+  } catch (error) {
+    console.error(`Error fetching coin detail for ${id}:`, error)
+    throw error
+  }
+}
+
+/**
+ * Fetch trading pairs/tickers for a specific coin
+ * @param id - Coin ID (e.g., "bitcoin")
+ * @param params - Additional parameters
+ */
+export async function getCoinTickers(
+  id: string,
+  params?: {
+    exchange_ids?: string
+    include_exchange_logo?: boolean
+    page?: number
+    order?: string
+    depth?: boolean
+  }
+): Promise<CoinTickerResponse> {
+  const queryParams = {
+    exchange_ids: params?.exchange_ids,
+    include_exchange_logo: params?.include_exchange_logo ?? true,
+    page: params?.page ?? 1,
+    order: params?.order ?? "trust_score_desc",
+    depth: params?.depth ?? false,
+  }
+
+  try {
+    const response = await axios.get<CoinTickerResponse>(
+      `${COINGECKO_BASE_URL}/coins/${id}/tickers`,
+      {
+        headers: {
+          "x-cg-demo-api-key": COINGECKO_API_KEY
+        },
+        params: queryParams
+      }
+    )
+    return response.data
+  } catch (error) {
+    console.error(`Error fetching tickers for ${id}:`, error)
+    throw error
+  }
+}
+
+/**
+ * Fetch OHLC (candlestick) data for a specific coin
+ * @param id - Coin ID (e.g., "bitcoin")
+ * @param vs_currency - The target currency (default: usd)
+ * @param days - Number of days (1, 7, 14, 30, 90, 180, 365, max)
+ */
+export async function getCoinOHLC(
+  id: string,
+  vs_currency: string = "usd",
+  days: number = 7
+): Promise<OHLCData[]> {
+  try {
+    const response = await axios.get<number[][]>(
+      `${COINGECKO_BASE_URL}/coins/${id}/ohlc`,
+      {
+        headers: {
+          "x-cg-demo-api-key": COINGECKO_API_KEY
+        },
+        params: {
+          vs_currency,
+          days,
+        },
+      }
+    )
+    
+    // Transform the array response to typed objects
+    return response.data.map(([timestamp, open, high, low, close]) => ({
+      timestamp,
+      open,
+      high,
+      low,
+      close,
+    }))
+  } catch (error) {
+    console.error(`Error fetching OHLC data for ${id}:`, error)
+    throw error
+  }
+}
+
+/**
+ * Fetch historical chart data for a custom date range
+ * @param id - Coin ID (e.g., "bitcoin")
+ * @param vs_currency - The target currency (default: usd)
+ * @param from - Start timestamp (unix timestamp in seconds)
+ * @param to - End timestamp (unix timestamp in seconds)
+ */
+export async function getCoinMarketChartRange(
+  id: string,
+  vs_currency: string = "usd",
+  from: number,
+  to: number
+): Promise<MarketChartRange> {
+  try {
+    const response = await axios.get<MarketChartRange>(
+      `${COINGECKO_BASE_URL}/coins/${id}/market_chart/range`,
+      {
+        headers: {
+          "x-cg-demo-api-key": COINGECKO_API_KEY
+        },
+        params: {
+          vs_currency,
+          from,
+          to,
+        },
+      }
+    )
+    return response.data
+  } catch (error) {
+    console.error(`Error fetching market chart range for ${id}:`, error)
+    throw error
+  }
+}
+
+/**
+ * Fetch simple price data for one or more coins
+ * @param ids - Comma-separated coin IDs
+ * @param vs_currencies - Comma-separated currency codes
+ * @param params - Additional parameters
+ */
+export async function getSimplePrice(
+  ids: string | string[],
+  vs_currencies: string | string[] = "usd",
+  params?: {
+    include_market_cap?: boolean
+    include_24hr_vol?: boolean
+    include_24hr_change?: boolean
+    include_last_updated_at?: boolean
+    precision?: string
+  }
+): Promise<Record<string, Record<string, number>>> {
+  const coinIds = Array.isArray(ids) ? ids.join(",") : ids
+  const currencies = Array.isArray(vs_currencies) ? vs_currencies.join(",") : vs_currencies
+
+  const queryParams = {
+    ids: coinIds,
+    vs_currencies: currencies,
+    include_market_cap: params?.include_market_cap ?? false,
+    include_24hr_vol: params?.include_24hr_vol ?? false,
+    include_24hr_change: params?.include_24hr_change ?? false,
+    include_last_updated_at: params?.include_last_updated_at ?? false,
+    precision: params?.precision,
+  }
+
+  try {
+    const response = await axios.get(
+      `${COINGECKO_BASE_URL}/simple/price`,
+      {
+        headers: {
+          "x-cg-demo-api-key": COINGECKO_API_KEY
+        },
+        params: queryParams
+      }
+    )
+    return response.data
+  } catch (error) {
+    console.error("Error fetching simple price:", error)
+    throw error
+  }
+}
+
+/**
+ * Search for coins, exchanges, categories, and NFTs
+ * @param query - Search query string
+ */
+export async function searchCoinGecko(query: string): Promise<SearchResponse> {
+  if (!query || query.trim().length === 0) {
+    return { coins: [], exchanges: [], categories: [], nfts: [] }
+  }
+
+  try {
+    const response = await axios.get<SearchResponse>(
+      `${COINGECKO_BASE_URL}/search`,
+      {
+        headers: {
+          "x-cg-demo-api-key": COINGECKO_API_KEY
+        },
+        params: {
+          query: query.trim()
+        }
+      }
+    )
+    return response.data
+  } catch (error) {
+    console.error("Error searching CoinGecko:", error)
+    throw error
+  }
+}
+
+/**
+ * Get trending search coins, NFTs, and categories
+ * Top-7 trending coins on CoinGecko as searched by users in the last 24 hours
+ */
+export async function getTrendingSearch(): Promise<TrendingResponse> {
+  try {
+    const response = await axios.get<TrendingResponse>(
+      `${COINGECKO_BASE_URL}/search/trending`,
+      {
+        headers: {
+          "x-cg-demo-api-key": COINGECKO_API_KEY
+        }
+      }
+    )
+    return response.data
+  } catch (error) {
+    console.error("Error fetching trending data:", error)
+    throw error
+  }
+}
+
+
