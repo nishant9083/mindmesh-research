@@ -36,6 +36,7 @@ export function NewsPage() {
         setSources(sourcesData)
         setCategories(categoriesData)
         setDailyRecaps(recapsData)
+        console.log(recapsData);
       } catch (error) {
         console.error("Failed to fetch news data:", error)
       } finally {
@@ -156,9 +157,9 @@ export function NewsPage() {
                   onClick={() => setSelectedRecap(recap)}
                   className="bg-[#0f1118] border border-[#1e2738] rounded-lg p-4 hover:border-[#2a3548] transition-colors cursor-pointer shrink-0 w-80"
                 >
-                  <div className="text-xs text-blue-400 mb-2">(●) {recap.displayDate}</div>
+                  <div className="text-xs text-blue-400 mb-2">(●) {recap.recapDate}</div>
                   <p className="text-sm text-gray-300 leading-relaxed line-clamp-3">
-                    {truncateToWords(recap.aiSummary, 12)}
+                    {truncateToWords(recap.summary, 12)}
                   </p>
                 </div>
               ))

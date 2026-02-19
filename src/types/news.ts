@@ -31,6 +31,7 @@ export interface NewsItem {
   status: string
   createdOn: number
   updatedOn: number | null
+  aiSummary: string
   sourceData: {
     NAME: string
   }
@@ -92,9 +93,10 @@ export interface DailyRecapBullet {
  */
 export interface DailyRecap {
   id: string
+  title: string
   date: string                    // ISO date string (e.g., "2026-02-19")
-  displayDate: string             // Formatted display date (e.g., "Today, Feb 19")
-  aiSummary: string               // Full AI-generated summary text
+  recapDate: string             // Formatted display date (e.g., "Today, Feb 19")
+  summary: string               // Full AI-generated summary text
   bullets: DailyRecapBullet[]     // Structured bullet points with sources
   updatedAt: string               // Last updated timestamp
   createdAt: string               // Creation timestamp

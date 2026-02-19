@@ -53,6 +53,7 @@ function mapNewsItem(raw: NewsItem): NewsItem {
     score: raw.score,
     sentiment: raw.sentiment,
     status: raw.status,
+    aiSummary: raw.aiSummary,
     createdOn: raw.createdOn,
     sourceData: raw.sourceData,
     updatedOn: raw.updatedOn,

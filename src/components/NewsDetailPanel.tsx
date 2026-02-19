@@ -20,7 +20,7 @@ export function NewsDetailPanel({ selectedNews, onClose }: NewsDetailPanelProps)
       />
 
       {/* Right-side detail panel */}
-      <div className="fixed inset-y-0 right-0 w-1/2 bg-[#13151e] border-l border-[#1e2738] z-50 flex flex-col shadow-2xl animate-in slide-in-from-right duration-300">
+      <div className="fixed inset-y-0 right-0 w-1/2 bg-[#0f111b] border-l border-[#1e2738] z-50 flex flex-col shadow-2xl animate-in slide-in-from-right duration-300">
         {/* Close button */}
         <button
           type="button"
@@ -133,13 +133,30 @@ export function NewsDetailPanel({ selectedNews, onClose }: NewsDetailPanelProps)
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
           {/* Summary Section */}
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
               <span className="w-1 h-4 bg-blue-400! rounded-full" />
               Summary
             </h3>
-            <p className="text-sm leading-relaxed text-gray-300 whitespace-pre-line">
-              {selectedNews.body}
-            </p>
+            {selectedNews.aiSummary ? (
+              <ul className="text-sm leading-relaxed text-gray-300 space-y-1 pl-6">
+                {selectedNews.aiSummary
+                  .split(/\n+/)
+                  .filter((line) => line.trim().startsWith('•'))
+                  .map((line, idx) => (
+                    <li
+                      key={idx}
+                      className="list-disc list-inside"
+                      style={{ textIndent: '-1.2em', paddingLeft: '1.2em', whiteSpace: 'pre-line' }}
+                    >
+                      {line.replace(/^•\s*/, '')}
+                    </li>
+                  ))}
+              </ul>
+            ) : (
+              <p className="text-sm leading-relaxed text-gray-300 whitespace-pre-line">
+                {selectedNews.body}
+              </p>
+            )}
           </div>
 
           {/* Article Details */}
@@ -181,7 +198,7 @@ export function NewsDetailPanel({ selectedNews, onClose }: NewsDetailPanelProps)
           {/* All Categories */}
           {selectedNews.categoryData?.length > 0 && (
             <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                 <span className="w-1 h-4 bg-blue-400! rounded-full" />
                 All Categories
               </h3>

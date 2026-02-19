@@ -2,7 +2,7 @@ import axios from "axios";
 import type { DailyRecap } from "@/types/news";
 
 const API_BASE = import.meta.env.VITE_API_BASE;
-const DAILY_RECAP_URL = `${API_BASE}/daily-recap`;
+const DAILY_RECAP_URL = `${API_BASE}/news/recaps`;
 
 /**
  * Fetches all daily recaps from backend API
@@ -10,15 +10,16 @@ const DAILY_RECAP_URL = `${API_BASE}/daily-recap`;
  */
 export async function fetchDailyRecaps(limit: number = 7): Promise<DailyRecap[]> {
   try {
-    const { data } = await axios.get<DailyRecap[]>(DAILY_RECAP_URL, {
+    const { data: response } = await axios.get<{ data: DailyRecap[] }>(DAILY_RECAP_URL, {
       params: { limit },
     });
-    
-    if (!data || !Array.isArray(data)) {
+    console.log(response.data);
+
+    if (!response.data || !Array.isArray(response.data)) {
       return [];
     }
-    
-    return data;
+
+    return response.data;
   } catch (error) {
     console.error('Error fetching daily recaps:', error);
     return [];
