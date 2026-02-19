@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react"
 import { useCoinGecko } from "@/contexts"
 import { useCoinOHLC } from "@/hooks"
-import type { ChartTimeframe, ChartType } from "@/types"
+import type { ChartTimeframe, ChartType, CoinTicker } from "@/types"
 import { ComposedChart, LineChart, Line, AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Bar } from "recharts"
 import { formatCurrency, formatDateTime, formatCompactNumber } from "@/lib/format"
 import { TrendingUp, CandlestickChart, BarChart3 } from "lucide-react"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { formatTradingViewSymbol, mapExchangeToTradingView, TradingViewWidget } from "@/components"
 
 // Timeframe to days mapping for API calls
 const timeframeToDays: Record<ChartTimeframe, string | number> = {
@@ -20,7 +21,9 @@ const timeframeToDays: Record<ChartTimeframe, string | number> = {
 interface EnhancedChartSectionProps {
   coinId: string
   coinName: string
+  coinSymbol: string
   currency: string
+  tickers?: CoinTicker[]
 }
 
 // Custom Candlestick Shape Component
@@ -48,13 +51,35 @@ const Candlestick = (props: any) => {
   )
 }
 
-export function EnhancedChartSection({ coinId, currency }: EnhancedChartSectionProps) {
+export function EnhancedChartSection({ coinId, coinSymbol, currency, tickers = [] }: EnhancedChartSectionProps) {
   const [timeframe, setTimeframe] = useState<ChartTimeframe>("7D")
   const [chartType, setChartType] = useState<ChartType>("area")
-  const [dataType, setDataType] = useState<"price" | "volume" | "mcap">("price")
+  const [dataType, setDataType] = useState<"price" | "volume" | "mcap" | "tradingview">("price")
+  
+  // TradingView specific state
+  const [selectedExchange, setSelectedExchange] = useState<string>("BINANCE")
+  const [selectedQuote, setSelectedQuote] = useState<string>("USDT")
   
   const { chartData, isLoadingCharts, fetchChartDataForAssets } = useCoinGecko()
   const historicalData = chartData[coinId]
+
+  // Extract available exchanges and quotes from tickers
+  const availableExchanges = tickers.length > 0 
+    ? Array.from(new Set(tickers.map(t => mapExchangeToTradingView(t.market.name))))
+        .filter(ex => ex !== "BINANCE") // Remove default, we'll add it back
+        .slice(0, 5) // Limit to top 5
+    : []
+  
+  // Add BINANCE as default if not already present
+  const exchangeOptions = ["BINANCE", ...availableExchanges].filter((ex, i, arr) => arr.indexOf(ex) === i)
+  
+  // Extract available quote currencies from tickers
+  const availableQuotes = tickers.length > 0
+    ? Array.from(new Set(tickers.map(t => t.target.toUpperCase()))).slice(0, 6)
+    : ["USDT", "USD", "BTC"]
+  
+  // Ensure common quotes are available
+  const quoteOptions = Array.from(new Set(["USDT", "USD", ...availableQuotes]))
 
   // Fetch chart data when coinId or timeframe changes
   useEffect(() => {
@@ -119,38 +144,38 @@ export function EnhancedChartSection({ coinId, currency }: EnhancedChartSectionP
               <TabsTrigger value="mcap" className="text-white data-[state=active]:bg-blue-600">
                 Market Cap
               </TabsTrigger>
+              <TabsTrigger value="tradingview" className="text-white data-[state=active]:bg-blue-600">
+                TradingView
+              </TabsTrigger>
             </TabsList>
 
             {/* Chart Type Toggle */}
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setChartType("area")}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                  chartType === "area"
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${chartType === "area"
                     ? "bg-blue-600 text-white"
                     : "bg-gray-800 text-gray-400 hover:bg-gray-700"
-                }`}
+                  }`}
               >
                 <BarChart3 className="h-3.5 w-3.5" />
               </button>
               <button
                 onClick={() => setChartType("line")}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                  chartType === "line"
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${chartType === "line"
                     ? "bg-blue-600 text-white"
                     : "bg-gray-800 text-gray-400 hover:bg-gray-700"
-                }`}
+                  }`}
               >
                 <TrendingUp className="h-3.5 w-3.5" />
               </button>
               {dataType === "price" && (
                 <button
                   onClick={() => setChartType("candlestick")}
-                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                    chartType === "candlestick"
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${chartType === "candlestick"
                       ? "bg-blue-600 text-white"
                       : "bg-gray-800 text-gray-400 hover:bg-gray-700"
-                  }`}
+                    }`}
                 >
                   <CandlestickChart className="h-3.5 w-3.5" />
                 </button>
@@ -165,11 +190,10 @@ export function EnhancedChartSection({ coinId, currency }: EnhancedChartSectionP
             <button
               key={tf}
               onClick={() => setTimeframe(tf)}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
-                timeframe === tf
+              className={`px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${timeframe === tf
                   ? "bg-blue-600 text-white"
                   : "bg-gray-800/50 text-gray-400 hover:bg-gray-700"
-              }`}
+                }`}
             >
               {tf}
             </button>
@@ -582,6 +606,54 @@ export function EnhancedChartSection({ coinId, currency }: EnhancedChartSectionP
                 <div className="text-gray-400 text-sm">No data available</div>
               </div>
             )}
+          </div>
+        </TabsContent>
+        <TabsContent value="tradingview" className="m-0 p-0">
+          <div className="bg-[#0d0e10]">
+            {/* TradingView Controls */}
+            <div className="px-4 py-3 border-b border-gray-800 flex flex-wrap items-center gap-2">
+              <span className="text-xs text-gray-400">Exchange:</span>
+              <select
+                value={selectedExchange}
+                onChange={(e) => setSelectedExchange(e.target.value)}
+                className="px-2 py-1 text-xs bg-gray-800 text-gray-300 border border-gray-700 rounded hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                {exchangeOptions.map((ex) => (
+                  <option key={ex} value={ex}>
+                    {ex}
+                  </option>
+                ))}
+              </select>
+              
+              <span className="text-xs text-gray-400 ml-2">Quote:</span>
+              <select
+                value={selectedQuote}
+                onChange={(e) => setSelectedQuote(e.target.value)}
+                className="px-2 py-1 text-xs bg-gray-800 text-gray-300 border border-gray-700 rounded hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                {quoteOptions.map((q) => (
+                  <option key={q} value={q}>
+                    {q}
+                  </option>
+                ))}
+              </select>
+              
+              <span className="text-xs text-gray-500 ml-auto">
+                Symbol: {coinSymbol.toUpperCase()}/{selectedQuote}
+              </span>
+            </div>
+            
+            {/* TradingView Chart */}
+            <div className="p-4">
+              <TradingViewWidget
+                symbol={formatTradingViewSymbol(coinSymbol, selectedExchange, selectedQuote)}
+                height={500}
+                interval="D"
+                theme="dark"
+                toolbar={true}
+                showVolume={true}
+              />
+            </div>
           </div>
         </TabsContent>
       </Tabs>

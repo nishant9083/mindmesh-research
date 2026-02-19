@@ -106,7 +106,9 @@ export function CoinDetailPage({ coinId }: CoinDetailPageProps) {
             <EnhancedChartSection 
               coinId={coinId}
               coinName={coinDetail.name}
+              coinSymbol={coinDetail.symbol}
               currency={currency}
+              tickers={tickersData?.tickers ?? []}
             />
 
             {/* About/Profile Section */}
