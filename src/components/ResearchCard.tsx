@@ -20,7 +20,7 @@ function ResearchItemCard({ item }: { item: ResearchItem }) {
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">
+            <div className="w-full h-15 flex items-center justify-center text-xs text-gray-500">
               IMG
             </div>
           )}

@@ -114,7 +114,7 @@ export function ResearchPage() {
                                 </svg>
                                 Latest Reports
                             </h2>
-                            <button className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1">
+                            <button className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1 border-none!">
                                 View All <ChevronRight className="w-4 h-4" />
                             </button>
                         </div>
@@ -168,7 +168,7 @@ export function ResearchPage() {
                                 </svg>
                                 Trending Assets
                             </h2>
-                            <button className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1">
+                            <button className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1 border-none!">
                                 View All <ChevronRight className="w-4 h-4" />
                             </button>
                         </div>
@@ -223,7 +223,10 @@ export function ResearchPage() {
                             Newsletter
                         </h2>
                         <div className="flex items-center gap-4">
-                            <button className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1">
+                            <button
+                                className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1 border-none!"
+                                onClick={() => navigate('/news')}
+                            >
                                 View All <ChevronRight className="w-4 h-4" />
                             </button>
                             <div className="flex gap-2">
