@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useState, useRef, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { ChevronDown, Search, TrendingUp, Eye, Layers, Globe, X, Plus, Maximize2, Download, RotateCcw, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
+import { ChevronDown, Search, TrendingUp, X,  RotateCcw, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts"
 import { useCoinGecko, type TimeRange } from "@/contexts"
 import { formatCompactNumber, formatCurrency } from "@/lib/format"
@@ -14,9 +14,9 @@ type SortOrder = "asc" | "desc"
 
 const filterCategories: { category: FilterCategory; icon: React.ReactNode; options?: FilterOption[] }[] = [
   { category: "Top Assets", icon: <TrendingUp className="h-3.5 w-3.5" />, options: ["Top 100", "Gainers", "Losers"] },
-  { category: "Watchlists", icon: <Eye className="h-3.5 w-3.5" /> },
-  { category: "Sectors", icon: <Layers className="h-3.5 w-3.5" /> },
-  { category: "Ecosystems", icon: <Globe className="h-3.5 w-3.5" /> },
+  // { category: "Watchlists", icon: <Eye className="h-3.5 w-3.5" /> },
+  // { category: "Sectors", icon: <Layers className="h-3.5 w-3.5" /> },
+  // { category: "Ecosystems", icon: <Globe className="h-3.5 w-3.5" /> },
 ]
 
 // Chart tab options
@@ -36,6 +36,7 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
     chartData,
     isLoadingCharts,
     selectedAssets,
+    fetchChartDataForAssets,
     toggleAsset,
     timeRange,
     setTimeRange,
@@ -49,7 +50,7 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [activeChartTab, setActiveChartTab] = useState<ChartTab>("Price")
   const [chartType, setChartType] = useState<ChartType>("area")
-  const [showPercentage, setShowPercentage] = useState(false)
+  const [showPercentage, setShowPercentage] = useState(true)
   const [showVolume, setShowVolume] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -84,6 +85,11 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
+  useEffect(() => {
+    // if selected assets data is not available, fetch it
+    fetchChartDataForAssets(selectedAssets, timeRange)
+  }, [selectedAssets, timeRange])
+
 
   // Get time range label for table header
   const getTimeRangeLabel = () => {
@@ -94,7 +100,7 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
       case "90D": return "3M"
       case "1Y": return "1Y"
       case "Max": return "All"
-      default: return "1W"
+      default: return "24h"
     }
   }
 
@@ -157,7 +163,6 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
   const startIndex = (currentPage - 1) * itemsPerPage
   const endIndex = startIndex + itemsPerPage
   const paginatedData = sortedData.slice(startIndex, endIndex)
-  console.log("Paginated data length:", paginatedData)
 
   // Get page label (Top 100, Next 100, etc.)
   const getPageLabel = (pageNum: number) => {
@@ -217,6 +222,7 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
   }
 
   const toggleAssetSelection = (coinId: string) => {
+    console.log('toggling')
     toggleAsset(coinId)
   }
 
@@ -544,7 +550,6 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
 
                 {/* Data Rows */}
                 {!isLoading && !error && paginatedData.map((coin) => {
-                  console.log("Rendering row for:", coin, paginatedData[0])
 
                   const symbol = coin.symbol.toUpperCase()
 
@@ -561,6 +566,7 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                   return (
                     <tr
                       key={coin.id}
+                      onClick={() => toggleAssetSelection(coin.id)}
                       className={`
                 cursor-pointer transition-colors
                 ${selected
@@ -573,7 +579,7 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                       {/* Rank */}
                       <td
                         className="px-2 py-2.5 text-gray-500"
-                        onClick={() => toggleAssetSelection(coin.id)}
+                      // onClick={() => toggleAssetSelection(coin.id)}
                       >
                         {coin.market_cap_rank || "-"}
                       </td>
@@ -582,7 +588,7 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                       {/* Asset - Make clickable to navigate to detail page */}
                       <td
                         className="px-2 py-2.5 text-white font-medium group"
-                        onClick={() => toggleAssetSelection(coin.id)}
+                        // onClick={() => toggleAssetSelection(coin.id)}
                         title="Click to view details"
                       >
                         <div className="flex items-center gap-2 group-hover:text-blue-400 transition-colors">
@@ -605,6 +611,7 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
 
                           <button
                             onClick={(e) => {
+                              e.stopPropagation()
                               navigate(`/coin/${coin.id}`)
                               onAssetClick?.(coin.id)
                             }}
@@ -619,7 +626,7 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                       {/* Price */}
                       <td
                         className="px-2 py-2.5 text-white text-right group relative cursor-pointer"
-                        onClick={() => toggleAssetSelection(coin.id)}
+                        // onClick={() => toggleAssetSelection(coin.id)}
                         title={`24h High: ${formatCurrency(coin.high_24h)}\n24h Low: ${formatCurrency(coin.low_24h)}\nATH: ${formatCurrency(coin.ath)}\nATL: ${formatCurrency(coin.atl)}`}
                       >
                         {formatCurrency(coin.current_price)}
@@ -632,7 +639,7 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                           ? "text-green-400"
                           : "text-red-400"
                           }`}
-                        onClick={() => toggleAssetSelection(coin.id)}
+                        // onClick={() => toggleAssetSelection(coin.id)}
                         title={`${getTimeRangeLabel()} Change: ${positive ? "+" : ""}${changePercent?.toFixed(2)}%\n24h Change: ${coin.price_change_percentage_24h >= 0 ? "+" : ""}${coin.price_change_percentage_24h?.toFixed(2)}%`}
                       >
                         {positive ? "+" : ""}
@@ -643,7 +650,7 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                       {/* Market Cap */}
                       <td
                         className="px-2 py-2.5 text-blue-400 text-right"
-                        onClick={() => toggleAssetSelection(coin.id)}
+                        // onClick={() => toggleAssetSelection(coin.id)}
                         title={`Market Cap: ${formatCompactNumber(coin.market_cap, 2)}\n24h Volume: ${formatCompactNumber(coin.total_volume, 2)}\nCirculating: ${coin.circulating_supply.toLocaleString()} ${symbol}\n${coin.max_supply ? `Max Supply: ${coin.max_supply.toLocaleString()} ${symbol}` : 'No Max Supply'}`}
                       >
                         {formatCompactNumber(coin.market_cap, 2)}
@@ -676,8 +683,8 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
                   className={`p-1.5 rounded transition-colors ${currentPage === 1
-                      ? "text-gray-600 cursor-not-allowed"
-                      : "text-gray-400 hover:bg-[#1a2332] hover:text-white"
+                    ? "text-gray-600 cursor-not-allowed"
+                    : "text-gray-400 hover:bg-[#1a2332] hover:text-white"
                     }`}
                   title="Previous 100"
                 >
@@ -691,8 +698,8 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                       key={idx}
                       onClick={() => handlePageChange(page)}
                       className={`min-w-7 h-7 px-2 rounded text-xs transition-colors ${currentPage === page
-                          ? "bg-blue-600 text-white"
-                          : "text-gray-400 hover:bg-[#1a2332] hover:text-white"
+                        ? "bg-blue-600 text-white"
+                        : "text-gray-400 hover:bg-[#1a2332] hover:text-white"
                         }`}
                     >
                       {page}
@@ -709,8 +716,8 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
                   className={`p-1.5 rounded transition-colors ${currentPage === totalPages
-                      ? "text-gray-600 cursor-not-allowed"
-                      : "text-gray-400 hover:bg-[#1a2332] hover:text-white"
+                    ? "text-gray-600 cursor-not-allowed"
+                    : "text-gray-400 hover:bg-[#1a2332] hover:text-white"
                     }`}
                   title="Next 100"
                 >
@@ -728,7 +735,7 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
         {/* Chart Section */}
         <div className="w-2/3 flex flex-col overflow-hidden">
           {/* Chart Toolbar */}
-          <div className="flex items-center justify-between px-3 py-2 border-b border-[#1e2738] shrink-0">
+          <div className="flex items-center justify-between px-3 py-2 border-b border-[#1e2738] shrink-0 overflow-x-auto no-scrollbar">
             <div className="flex items-center gap-2">
               {/* Chart type icons */}
               <button
@@ -781,7 +788,7 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
               <div className="w-px h-4 bg-[#2a3548] mx-1" />
 
               {/* Time range selector */}
-              {(["1D", "7D", "30D", "90D", "1Y", "Max"] as TimeRange[]).map((range) => (
+              {(["1D", "7D", "30D", "90D", "1Y"] as TimeRange[]).map((range) => (
                 <button
                   key={range}
                   onClick={() => setTimeRange(range)}
@@ -809,7 +816,7 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
               </button>
 
               {/* Volume overlay toggle */}
-              {activeChartTab === "Price" && (
+              {activeChartTab === "Price" && chartType !== "bar" && (
                 <button
                   onClick={() => setShowVolume(!showVolume)}
                   className={`px-3 py-1 text-xs rounded transition-colors ${showVolume
@@ -838,18 +845,18 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
               </button>
 
               {/* Additional actions */}
-              <button
+              {/* <button
                 className="p-1.5 rounded text-gray-400 hover:bg-[#1a2332] hover:text-white transition-colors"
                 title="Fullscreen"
               >
                 <Maximize2 className="w-4 h-4" />
-              </button>
-              <button
+              </button> */}
+              {/* <button
                 className="p-1.5 rounded text-gray-400 hover:bg-[#1a2332] hover:text-white transition-colors"
                 title="Download chart"
               >
                 <Download className="w-4 h-4" />
-              </button>
+              </button> */}
             </div>
           </div>
 
@@ -880,10 +887,10 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                 </span>
               )
             })}
-            <button className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs text-gray-400 hover:text-white hover:bg-[#1a2332] border border-dashed border-[#2a3548]">
+            {/* <button className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs text-gray-400 hover:text-white hover:bg-[#1a2332] border border-dashed border-[#2a3548]">
               <Plus className="w-3 h-3" />
               Add
-            </button>
+            </button> */}
           </div>
 
           {/* Chart Area */}
@@ -920,10 +927,11 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                       tick={{ fill: "#718096", fontSize: 11 }}
                       axisLine={{ stroke: "#2a3548" }}
                       tickLine={false}
-                      // interval="equidistantPreserveEnd"
                       minTickGap={50}
                     />
+                    {/* Primary Y-axis for price */}
                     <YAxis
+                      yAxisId="price"
                       stroke="#4a5568"
                       tick={{ fill: "#718096", fontSize: 11 }}
                       axisLine={{ stroke: "#2a3548" }}
@@ -936,6 +944,23 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                         return `$${value.toFixed(2)}`
                       }}
                     />
+                    {/* Secondary Y-axis for volume */}
+                    {showVolume && activeChartTab === "Price" && (
+                      <YAxis
+                        yAxisId="volume"
+                        orientation="right"
+                        stroke="#4a5568"
+                        tick={{ fill: "#718096", fontSize: 11 }}
+                        axisLine={{ stroke: "#2a3548" }}
+                        tickLine={false}
+                        tickFormatter={(value) => {
+                          if (value >= 1e9) return `${(value / 1e9).toFixed(1)}B`
+                          if (value >= 1e6) return `${(value / 1e6).toFixed(1)}M`
+                          if (value >= 1e3) return `${(value / 1e3).toFixed(1)}K`
+                          return value.toFixed(0)
+                        }}
+                      />
+                    )}
                     <Tooltip
                       content={({ active, payload, label }) => {
                         if (!active || !payload || payload.length === 0) return null
@@ -944,22 +969,25 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                           <div className="bg-[#1a2332] border border-[#2a3548] rounded-lg p-3 shadow-xl">
                             <p className="text-white text-xs font-medium mb-2">{dateFull}</p>
                             {payload.map((entry: any) => {
-                              const coinId = entry.dataKey
+                              const coinId = entry.dataKey.replace('_volume', '')
+                              const isVolume = entry.dataKey.includes('_volume')
                               const coin = marketData.find(c => c.id === coinId)
                               const symbol = coin?.symbol.toUpperCase() || coinId.toUpperCase()
                               const color = entry.stroke || entry.fill
                               const value = entry.value
 
                               return (
-                                <div key={coinId} className="flex items-center justify-between gap-4 text-xs mb-1">
+                                <div key={entry.dataKey} className="flex items-center justify-between gap-4 text-xs mb-1">
                                   <div className="flex items-center gap-2">
                                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
-                                    <span className="text-gray-300">{symbol}</span>
+                                    <span className="text-gray-300">{symbol}{isVolume ? ' Vol' : ''}</span>
                                   </div>
                                   <span className="text-white font-medium">
-                                    {showPercentage
-                                      ? `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`
-                                      : formatCurrency(value)
+                                    {isVolume
+                                      ? formatCompactNumber(value, 2)
+                                      : showPercentage
+                                        ? `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`
+                                        : formatCurrency(value)
                                     }
                                   </span>
                                 </div>
@@ -974,10 +1002,22 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                         key={coinId}
                         type="monotone"
                         dataKey={coinId}
+                        yAxisId="price"
                         stroke={stringToColor(coinId)}
                         strokeWidth={2.5}
                         dot={false}
                         activeDot={{ r: 5, strokeWidth: 2 }}
+                        animationDuration={800}
+                      />
+                    ))}
+                    {/* Volume overlay bars */}
+                    {showVolume && activeChartTab === "Price" && selectedAssets.map((coinId) => (
+                      <Bar
+                        key={`${coinId}_volume`}
+                        dataKey={`${coinId}_volume`}
+                        yAxisId="volume"
+                        fill={stringToColor(coinId)}
+                        opacity={0.2}
                         animationDuration={800}
                       />
                     ))}
@@ -1005,10 +1045,11 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                       tick={{ fill: "#718096", fontSize: 11 }}
                       axisLine={{ stroke: "#2a3548" }}
                       tickLine={false}
-                      // interval="preserveStartEnd"
                       minTickGap={50}
                     />
+                    {/* Primary Y-axis for price */}
                     <YAxis
+                      yAxisId="price"
                       stroke="#4a5568"
                       tick={{ fill: "#718096", fontSize: 11 }}
                       axisLine={{ stroke: "#2a3548" }}
@@ -1021,6 +1062,23 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                         return `$${value.toFixed(2)}`
                       }}
                     />
+                    {/* Secondary Y-axis for volume */}
+                    {showVolume && activeChartTab === "Price" && (
+                      <YAxis
+                        yAxisId="volume"
+                        orientation="right"
+                        stroke="#4a5568"
+                        tick={{ fill: "#718096", fontSize: 11 }}
+                        axisLine={{ stroke: "#2a3548" }}
+                        tickLine={false}
+                        tickFormatter={(value) => {
+                          if (value >= 1e9) return `${(value / 1e9).toFixed(1)}B`
+                          if (value >= 1e6) return `${(value / 1e6).toFixed(1)}M`
+                          if (value >= 1e3) return `${(value / 1e3).toFixed(1)}K`
+                          return value.toFixed(0)
+                        }}
+                      />
+                    )}
                     <Tooltip
                       content={({ active, payload, label }) => {
                         if (!active || !payload || payload.length === 0) return null
@@ -1029,22 +1087,25 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                           <div className="bg-[#1a2332] border border-[#2a3548] rounded-lg p-3 shadow-xl">
                             <p className="text-white text-xs font-medium mb-2">{dateFull}</p>
                             {payload.map((entry: any) => {
-                              const coinId = entry.dataKey
+                              const coinId = entry.dataKey.replace('_volume', '')
+                              const isVolume = entry.dataKey.includes('_volume')
                               const coin = marketData.find(c => c.id === coinId)
                               const symbol = coin?.symbol.toUpperCase() || coinId.toUpperCase()
                               const color = entry.stroke || entry.fill
                               const value = entry.value
 
                               return (
-                                <div key={coinId} className="flex items-center justify-between gap-4 text-xs mb-1">
+                                <div key={entry.dataKey} className="flex items-center justify-between gap-4 text-xs mb-1">
                                   <div className="flex items-center gap-2">
                                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
-                                    <span className="text-gray-300">{symbol}</span>
+                                    <span className="text-gray-300">{symbol}{isVolume ? ' Vol' : ''}</span>
                                   </div>
                                   <span className="text-white font-medium">
-                                    {showPercentage
-                                      ? `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`
-                                      : formatCurrency(value)
+                                    {isVolume
+                                      ? formatCompactNumber(value, 2)
+                                      : showPercentage
+                                        ? `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`
+                                        : formatCurrency(value)
                                     }
                                   </span>
                                 </div>
@@ -1059,6 +1120,7 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                         key={coinId}
                         type="monotone"
                         dataKey={coinId}
+                        yAxisId="price"
                         stroke={stringToColor(coinId)}
                         strokeWidth={2.5}
                         fill={`url(#gradient-${coinId})`}
@@ -1067,6 +1129,17 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                         animationDuration={800}
                       />
                     ))}
+                    {/* Volume overlay bars */}
+                    {/* {showVolume && activeChartTab === "Price" && selectedAssets.map((coinId) => (
+                      <Bar
+                        key={`${coinId}_volume`}
+                        dataKey={`${coinId}_volume`}
+                        yAxisId="volume"
+                        fill={stringToColor(coinId)}
+                        opacity={0.2}
+                        animationDuration={800}
+                      />
+                    ))} */}
                   </AreaChart>
                 ) : (
                   <BarChart
@@ -1080,10 +1153,11 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                       tick={{ fill: "#718096", fontSize: 11 }}
                       axisLine={{ stroke: "#2a3548" }}
                       tickLine={false}
-                      // interval="0"
                       minTickGap={50}
                     />
+                    {/* Primary Y-axis for price */}
                     <YAxis
+                      yAxisId="price"
                       stroke="#4a5568"
                       tick={{ fill: "#718096", fontSize: 11 }}
                       axisLine={{ stroke: "#2a3548" }}
@@ -1096,6 +1170,23 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                         return `$${value.toFixed(2)}`
                       }}
                     />
+                    {/* Secondary Y-axis for volume */}
+                    {/* {showVolume && activeChartTab === "Price" && (
+                      <YAxis
+                        yAxisId="volume"
+                        orientation="right"
+                        stroke="#4a5568"
+                        tick={{ fill: "#718096", fontSize: 11 }}
+                        axisLine={{ stroke: "#2a3548" }}
+                        tickLine={false}
+                        tickFormatter={(value) => {
+                          if (value >= 1e9) return `${(value / 1e9).toFixed(1)}B`
+                          if (value >= 1e6) return `${(value / 1e6).toFixed(1)}M`
+                          if (value >= 1e3) return `${(value / 1e3).toFixed(1)}K`
+                          return value.toFixed(0)
+                        }}
+                      />
+                    )} */}
                     <Tooltip
                       content={({ active, payload, label }) => {
                         if (!active || !payload || payload.length === 0) return null
@@ -1104,22 +1195,25 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                           <div className="bg-[#1a2332] border border-[#2a3548] rounded-lg p-3 shadow-xl">
                             <p className="text-white text-xs font-medium mb-2">{dateFull}</p>
                             {payload.map((entry: any) => {
-                              const coinId = entry.dataKey
+                              const coinId = entry.dataKey.replace('_volume', '')
+                              const isVolume = entry.dataKey.includes('_volume')
                               const coin = marketData.find(c => c.id === coinId)
                               const symbol = coin?.symbol.toUpperCase() || coinId.toUpperCase()
                               const color = entry.fill
                               const value = entry.value
 
                               return (
-                                <div key={coinId} className="flex items-center justify-between gap-4 text-xs mb-1">
+                                <div key={entry.dataKey} className="flex items-center justify-between gap-4 text-xs mb-1">
                                   <div className="flex items-center gap-2">
                                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
-                                    <span className="text-gray-300">{symbol}</span>
+                                    <span className="text-gray-300">{symbol}{isVolume ? ' Vol' : ''}</span>
                                   </div>
                                   <span className="text-white font-medium">
-                                    {showPercentage
-                                      ? `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`
-                                      : formatCurrency(value)
+                                    {isVolume
+                                      ? formatCompactNumber(value, 2)
+                                      : showPercentage
+                                        ? `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`
+                                        : formatCurrency(value)
                                     }
                                   </span>
                                 </div>
@@ -1133,12 +1227,24 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
                       <Bar
                         key={coinId}
                         dataKey={coinId}
+                        yAxisId="price"
                         fill={stringToColor(coinId)}
                         opacity={0.8}
                         animationDuration={800}
                         radius={[4, 4, 0, 0]}
                       />
                     ))}
+                    {/* Volume overlay bars - shown behind price bars */}
+                    {/* {showVolume && activeChartTab === "Price" && selectedAssets.map((coinId) => (
+                      <Bar
+                        key={`${coinId}_volume`}
+                        dataKey={`${coinId}_volume`}
+                        yAxisId="volume"
+                        fill={stringToColor(coinId)}
+                        opacity={0.15}
+                        animationDuration={800}
+                      />
+                    ))} */}
                   </BarChart>
                 )}
                 </ResponsiveContainer>
@@ -1147,7 +1253,7 @@ export function PricesChartCard({ onAssetClick }: PricesChartCardProps) {
 
             {/* Chart Statistics/Legend */}
             {selectedAssets.length > 0 && !isChartLoading && (
-              <div className="absolute right-4 top-4 flex flex-col gap-2">
+              <div className="absolute right-4 top-4 max-h-[calc(100%-8rem)] overflow-y-auto flex flex-col gap-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent pr-1">
                 {selectedAssets.map((coinId) => {
                   const coin = marketData.find(c => c.id === coinId)
                   const symbol = coin?.symbol.toUpperCase() || coinId.toUpperCase()

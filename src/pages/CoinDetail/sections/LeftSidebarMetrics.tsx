@@ -1,6 +1,6 @@
+import { formatCompactNumber, formatCurrency, formatPercentage } from "@/lib/format"
 import type { CoinMarketData } from "@/types"
-import { formatCurrency, formatCompactNumber, formatPercentage } from "@/lib/format"
-import { TrendingUp, Users, Coins, Layers, BarChart3, DollarSign } from "lucide-react"
+import { BarChart3, Users } from "lucide-react"
 
 interface LeftSidebarMetricsProps {
   coinName: string

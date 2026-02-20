@@ -45,7 +45,7 @@ const Candlestick = (props: any) => {
 }
 
 export function PriceChartSection({ coinId, coinName, currency }: PriceChartSectionProps) {
-  const [timeframe, setTimeframe] = useState<ChartTimeframe>("7D")
+  const [timeframe, setTimeframe] = useState<ChartTimeframe>("1D")
   const [chartType, setChartType] = useState<ChartType>("area")
   
   const { chartData, isLoadingCharts } = useCoinGecko()
@@ -148,7 +148,7 @@ export function PriceChartSection({ coinId, coinName, currency }: PriceChartSect
       </div>
 
       {/* Chart */}
-      <div className="h-[400px] w-full">
+      <div className="h-100 w-full">
         {isLoading ? (
           <div className="h-full flex items-center justify-center">
             <div className="text-gray-400">Loading chart data...</div>

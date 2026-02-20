@@ -1,4 +1,3 @@
-import { useState } from "react"
 import { BrowserRouter, Routes, Route, useParams, Navigate } from "react-router-dom"
 import { Dashboard, CoinDetailPage, ResearchPage, ResearchArticlePage, NewsPage } from "@/pages"
 import { CoinGeckoProvider } from "@/contexts"

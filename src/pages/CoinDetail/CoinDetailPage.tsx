@@ -62,7 +62,7 @@ export function CoinDetailPage({ coinId }: CoinDetailPageProps) {
 
   return (
     <div className="h-full overflow-y-auto bg-[#060709]">
-      <div className="max-w-[1800px] mx-auto px-4 py-4">
+      <div className="max-w-450 mx-auto px-4 py-4">
         {/* Compact Header */}
         <CompactCoinHeader 
           coin={coinDetail}

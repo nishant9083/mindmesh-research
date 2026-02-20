@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { fetchResearchArticleById } from "@/services/research-api"
 import type { ResearchItem } from "@/types/news"
+// import ReactMarkdown from "react-markdown"
 
 export function ResearchArticlePage() {
   const { id } = useParams<{ id: string }>()
@@ -12,7 +13,7 @@ export function ResearchArticlePage() {
   useEffect(() => {
     async function loadArticle() {
       if (!id) return
-      
+
       try {
         setLoading(true)
         const article = await fetchResearchArticleById(id)
@@ -63,7 +64,7 @@ export function ResearchArticlePage() {
     <div className="h-full overflow-y-auto bg-[#060709] relative">
       {/* Gradient Background */}
       <div className="absolute inset-0 bg-linear-to-br from-blue-400/20 via-transparent to-transparent pointer-events-none"></div>
-      
+
       <div className="max-w-4xl mx-auto px-6 py-8 relative z-10">
         {/* Header Section */}
         <div className="mb-8">
@@ -77,10 +78,10 @@ export function ResearchArticlePage() {
             </button>
             {Array.isArray(article.tags) && article.tags.length > 0 && article.tags.map((tag, idx) => (
               <span
-              key={idx}
-              className="px-3 py-1 bg-blue-400/20 text-blue-100 text-xs rounded"
+                key={idx}
+                className="px-3 py-1 bg-blue-400/20 text-blue-100 text-xs rounded"
               >
-              {tag.charAt(0).toUpperCase() + tag.slice(1)}
+                {tag.charAt(0).toUpperCase() + tag.slice(1)}
               </span>
             ))}
           </div>
@@ -104,9 +105,9 @@ export function ResearchArticlePage() {
               </div>
             </div>
             {/* Read Original Button */}
-            <a 
-              href={article.url} 
-              target="_blank" 
+            <a
+              href={article.url}
+              target="_blank"
               rel="noopener noreferrer"
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white! text-sm rounded-lg transition-colors"
             >
@@ -118,7 +119,7 @@ export function ResearchArticlePage() {
           {typeof article.tags === "string" && article.tags.trim() && (
             <div className="flex flex-wrap gap-2 mt-4">
               {article.tags.split(',').map((tag, index) => (
-                <span 
+                <span
                   key={index}
                   className="px-3 py-1 bg-[#1a2332] text-gray-300 text-xs rounded"
                 >
@@ -135,8 +136,33 @@ export function ResearchArticlePage() {
             <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
               <span className="text-blue-400">✨</span> AI Summary
             </h2>
-            <div className="text-gray-300 leading-relaxed">
-              <p>{article.aiSummary}</p>
+            <div className="text-gray-300 leading-relaxed space-y-4">
+              {article.aiSummary
+                .split(/\n\n+/)
+                .filter((para: string) => para.trim().length > 0)
+                .length > 1
+                ? article.aiSummary
+                  .split(/\n\n+/)
+                  .filter((para: string) => para.trim().length > 0)
+                  .map((para: string, idx: number) => (
+                    <p key={idx}>{para.trim()}</p>
+                  ))
+                : (() => {
+                  const sentences = article.aiSummary.match(/[^.!?]+[.!?]+/g) || [article.aiSummary]
+                  const totalSentences = sentences.length
+                  const parasCount = Math.min(4, Math.max(1, Math.ceil(totalSentences / 2)))
+                  const sentencesPerPara = Math.ceil(totalSentences / parasCount)
+                  const paragraphs: string[] = []
+                  for (let i = 0; i < totalSentences; i += sentencesPerPara) {
+                    paragraphs.push(
+                      sentences.slice(i, i + sentencesPerPara).join(" ").trim()
+                    )
+                  }
+                  return paragraphs.map((para, idx) => (
+                    <p key={idx}>{para}</p>
+                  ))
+                })()
+              }
             </div>
           </div>
         )}
@@ -148,6 +174,7 @@ export function ResearchArticlePage() {
             <div className="text-gray-300 leading-relaxed space-y-4">
               <p>{article.content}</p>
             </div>
+            {/* <ReactMarkdown>{article.content}</ReactMarkdown> */}
           </div>
         )}
 
@@ -162,7 +189,7 @@ export function ResearchArticlePage() {
         )}
 
         {/* Article Content */}
-        <div className="prose prose-invert max-w-none">
+        {/* <div className="prose prose-invert max-w-none">
           <div className="text-gray-300 leading-relaxed space-y-6">
             <h2 className="text-2xl font-bold text-white mt-8 mb-4">The Strategic Pivot</h2>
             <p>
@@ -241,13 +268,13 @@ export function ResearchArticlePage() {
               Cryptocurrency investments carry significant risk.
             </p>
           </div>
-        </div>
+        </div> */}
 
         {/* Footer metadata */}
         <div className="mt-12 pt-6 border-t border-[#1e2738]">
           <div className="flex items-center justify-between text-sm text-gray-500">
             <div>
-                <span>Source: {article.source ? article.source.charAt(0).toUpperCase() + article.source.slice(1) : ""}</span>
+              <span>Source: {article.source ? article.source.charAt(0).toUpperCase() + article.source.slice(1) : ""}</span>
             </div>
             <div>
               <span>Published: {formattedDate}</span>

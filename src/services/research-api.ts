@@ -14,7 +14,6 @@ export async function fetchResearchArticles(): Promise<ResearchItem[]> {
         if (!response?.success || !response?.data || !Array.isArray(response.data)) {
             return [];
         }
-        console.log(response);
         return response.data;
     } catch (error) {
         console.error('Error fetching research articles:', error);

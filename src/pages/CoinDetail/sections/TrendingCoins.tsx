@@ -1,9 +1,9 @@
+import { Card } from "@/components/ui/card"
+import { formatCurrency } from "@/lib/format"
+import { getTrendingSearch, type TrendingResponse } from "@/services/coingecko-api"
+import { Flame, Loader2 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { Card } from "@/components/ui/card"
-import { Flame, ArrowUpRight, Loader2 } from "lucide-react"
-import { getTrendingSearch, type TrendingResponse } from "@/services/coingecko-api"
-import { formatCompactNumber, formatCurrency } from "@/lib/format"
 
 export function TrendingCoins() {
     const navigate = useNavigate()

@@ -1,6 +1,6 @@
-import type { CoinMarketData } from "@/types"
-import { formatPercentage, formatCurrency } from "@/lib/format"
+import { formatCurrency, formatPercentage } from "@/lib/format"
 import { cn } from "@/lib/utils"
+import type { CoinMarketData } from "@/types"
 import { Calendar } from "lucide-react"
 
 interface PerformanceMetricsProps {
@@ -8,10 +8,6 @@ interface PerformanceMetricsProps {
   currency: string
 }
 
-interface PerformanceItem {
-  label: string
-  value: number | undefined
-}
 
 export function PerformanceMetrics({ marketData, currency }: PerformanceMetricsProps) {
   if (!marketData) return null

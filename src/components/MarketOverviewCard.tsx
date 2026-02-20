@@ -31,16 +31,9 @@ export function MarketOverviewCard() {
               </span>                    
               <span className="text-white font-bold">{data?.market_cap_rank ? `#${data.market_cap_rank}` : "#"}</span>
             </div>
-            <span className="text-green-400 text-xs">↑0.05%</span>
+            
           </div>
-          <div className="flex flex-col gap-0.5">
-            <span className="text-gray-200 text-xs invisible">.</span>
-            <div className="flex items-center gap-1">
-              <span className="w-4 h-4 rounded-full bg-gray-500 flex items-center justify-center text-[8px] text-white">Ξ</span>
-              <span className="text-white font-bold">9.87%</span>
-            </div>
-            <span className="text-green-400 text-xs">↑0.69%</span>
-          </div>
+          
         </div>
       </CardContent>
     </Card>

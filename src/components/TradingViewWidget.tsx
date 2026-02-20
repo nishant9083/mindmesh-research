@@ -160,7 +160,7 @@ export const TradingViewWidget = memo(function TradingViewWidget({
 
     // Create TradingView widget script
     const script = document.createElement("script")
-    script.src = "https://s3.tradingview.com/tv.js"
+    script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js"
     script.async = true
     script.type = "text/javascript"
     

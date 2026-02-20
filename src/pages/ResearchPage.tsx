@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom"
 import { fetchResearchArticles } from "@/services/research-api"
 import { fetchNews } from "@/services/news-api"
 import type { ResearchItem, NewsItem } from "@/types/news"
-import { ChevronRight } from "lucide-react"
+import { ArrowUpRight, ChevronDown, ChevronRight } from "lucide-react"
 import { NewsDetailPanel } from "@/components"
+import type { TrendingResponse } from "@/types"
+import { getTrendingSearch } from "@/services/coingecko-api"
 
 // Dummy spotlight data
 const spotlightData = {
@@ -15,21 +17,20 @@ const spotlightData = {
     imageUrl: "/api/placeholder/400/300" // You can replace with actual image
 }
 
-// Dummy trending assets data
-const trendingAssets = [
-    { name: "Kalshi", description: "Polymarket's Best Growth Path", category: "Prediction Markets", author: "Austin Weiler", date: "Jan 16, 2026", color: "#10b981" },
-    { name: "TRON", description: "State of TRON Q4 2025", category: "Layer-1", author: "Jeremy Koch", date: "Jan 20, 2026", color: "#ef4444" },
-    { name: "Aave", description: "Fear, Uncertainty, and DAOS: $AAVE DAO vs. Aave Labs", category: "Enterprise", subcategory: "Note", authors: "Chris Davis, Sam Ruskin", date: "Dec 27, 2025", color: "#8b5cf6" },
-]
 
 export function ResearchPage() {
     const navigate = useNavigate()
+    const [trendingData, setTrendingData] = useState<TrendingResponse | null>(null)
     const [latestReports, setLatestReports] = useState<ResearchItem[]>([])
     const [allReports, setAllReports] = useState<ResearchItem[]>([])
     const [newsletters, setNewsletters] = useState<NewsItem[]>([])
     const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null)
     const [loading, setLoading] = useState(true)
     const placeholder = import.meta.env.VITE_API_IMAGE_PLACEHOLDER
+
+    const handleCoinSelect = (coinId: string) => {
+        navigate(`/coin/${coinId}`)
+    }
 
     useEffect(() => {
         async function loadData() {
@@ -52,12 +53,25 @@ export function ResearchPage() {
         loadData()
     }, [])
 
+    // Fetch trending data on mount
+    useEffect(() => {
+        const fetchTrending = async () => {
+            try {
+                const data = await getTrendingSearch()
+                setTrendingData(data)
+            } catch (error) {
+                console.error("Error fetching trending data:", error)
+            }
+        }
+        fetchTrending()
+    }, [])
+
     return (
         <div className="h-full overflow-y-auto bg-[#060709]">
             <div className="mx-auto px-8 py-8">
                 {/* Header */}
                 <div className="mb-8 pb-4 border-b-2 border-gray-900">
-                    <h2 className="text-3xl font-bold text-white">Messari Research</h2>
+                    <h2 className="text-3xl font-bold text-white">Research</h2>
                 </div>
 
                 {/* Four Column Section */}
@@ -162,47 +176,63 @@ export function ResearchPage() {
                                 </svg>
                                 Trending Assets
                             </h2>
-                            <button className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1 border-none!">
+                            {/* <button className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1 border-none!">
                                 View All <ChevronRight className="w-4 h-4" />
-                            </button>
+                            </button> */}
                         </div>
 
-                        <div className="space-y-3">
-                            {trendingAssets.map((asset, index) => (
-                                <div
-                                    key={index}
-                                    className="bg-[#0f1118] border border-[#1e2738] rounded-lg p-4 hover:border-[#2a3548] transition-colors cursor-pointer"
-                                >
-                                    <div className="flex items-start gap-3">
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                {/* Asset icon */}
-                                                <div
-                                                    className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-xs text-white font-bold"
-                                                    style={{ backgroundColor: asset.color }}
-                                                >
-                                                    {asset.name.substring(0, 1)}
-                                                </div>
-                                                <span className="text-xs text-gray-500">{asset.name}</span>
-                                                <span className="text-xs text-gray-600">•</span>
-                                                <span className="text-xs text-gray-500">{asset.date}</span>
+                        <div className="space-y-3 overflow-y-auto h-90">
+                            {trendingData?.coins.map((data, idx) => {
+                                const item = data.item;
+                                const priceChange24h = item.data?.price_change_percentage_24h?.usd || 0
+                                const isPositive = priceChange24h >= 0
+
+                                return (
+                                    <button
+                                        key={item.id}
+                                        onClick={() => handleCoinSelect(item.id)}
+                                        className="w-full px-4 py-2.5 hover:bg-[#232d3f] transition-colors flex items-center gap-3 group"
+                                    >
+                                        <div className="flex items-center gap-2 min-w-0">
+                                            <span className="text-orange-500 text-xs font-bold w-5">
+                                                #{idx + 1}
+                                            </span>
+                                            <img
+                                                src={item.small}
+                                                alt={item.name}
+                                                className="w-6 h-6 rounded-full"
+                                                onError={(e) => {
+                                                    (e.target as HTMLImageElement).style.display = "none"
+                                                }}
+                                            />
+                                        </div>
+                                        <div className="flex flex-col items-start flex-1 min-w-0">
+                                            <div className="flex items-center gap-2 w-full">
+                                                <span className="text-white text-sm font-medium group-hover:text-blue-400 transition-colors truncate">
+                                                    {item.name}
+                                                </span>
+                                                <span className="text-gray-500 text-xs uppercase">
+                                                    {item.symbol}
+                                                </span>
                                             </div>
-                                            <h3 className="text-sm font-semibold text-white mb-1 line-clamp-2">{asset.description}</h3>
-                                            <div className="flex items-center gap-2 flex-wrap">
-                                                <span className="text-xs text-gray-400">{asset.category}</span>
-                                                {asset.subcategory && (
-                                                    <>
-                                                        <span className="text-xs text-gray-600">•</span>
-                                                        <span className="text-xs text-gray-400">{asset.subcategory}</span>
-                                                    </>
+                                            <div className="flex items-center gap-2">
+                                                {item.market_cap_rank && (
+                                                    <span className="text-gray-500 text-xs">
+                                                        Rank #{item.market_cap_rank}
+                                                    </span>
                                                 )}
-                                                <span className="text-xs text-gray-600">•</span>
-                                                <span className="text-xs text-gray-400">📝 {asset.authors || asset.author}</span>
+                                                {priceChange24h !== 0 && (
+                                                    <span className={`text-xs flex items-center gap-0.5 ${isPositive ? 'text-green-400' : 'text-red-400'}`}>
+                                                        <ArrowUpRight className={`h-3 w-3 ${!isPositive && 'rotate-90'}`} />
+                                                        {Math.abs(priceChange24h).toFixed(2)}%
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
-                                    </div>
-                                </div>
-                            ))}
+                                        <ChevronDown className="h-4 w-4 text-gray-500 -rotate-90 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    </button>
+                                )
+                            })}
                         </div>
                     </div>
                 </div>

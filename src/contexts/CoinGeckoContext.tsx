@@ -51,7 +51,7 @@ const timeRangeToPriceChangeParam: Record<TimeRange, string> = {
   "1D": "24h",
   "7D": "7d",
   "30D": "30d",
-  "90D": "200d", // CoinGecko doesn't have 90d, use 200d as closest
+  "90D": "90d", // CoinGecko doesn't have 90d, use 200d as closest
   "1Y": "1y",
   "Max": "1y", // Use 1y for max as well
 }
@@ -66,7 +66,7 @@ interface CoinGeckoProviderProps {
 export function CoinGeckoProvider({ 
   children, 
   autoRefreshInterval = 60000,
-  initialTimeRange = "7D",
+  initialTimeRange = "1D",
   initialSelectedAssets = []
 }: CoinGeckoProviderProps) {
   // Market Data State
@@ -82,7 +82,6 @@ export function CoinGeckoProvider({
   // Selection State
   const [selectedAssets, setSelectedAssets] = useState<string[]>(initialSelectedAssets)
   const [timeRange, setTimeRange] = useState<TimeRange>(initialTimeRange)
-
   // Fetch market data
   const fetchMarketData = useCallback(async () => {
     try {

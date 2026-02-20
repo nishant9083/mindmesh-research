@@ -1,14 +1,14 @@
-import { useState } from "react"
+import { useState, memo } from "react"
 import { NewsCard } from "@/components/NewsCard"
 import { NewsDetailPanel } from "@/components"
 import { PricesChartCard } from "@/components/PricesChartCard"
 import { MarketOverviewCard } from "@/components/MarketOverviewCard"
 import { DailyRecapCard } from "@/components/DailyRecapCard"
 import { ResearchCard } from "@/components/ResearchCard"
-import { MindshareCard } from "@/components/MindshareCard"
+// import { MindshareCard } from "@/components/MindshareCard"
 import type { NewsItem } from "@/types/news"
 
-export function Dashboard() {
+function DashboardComponent() {
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null)
 
   return (
@@ -29,9 +29,9 @@ export function Dashboard() {
             <div className="h-full flex-1 min-w-0">
               <ResearchCard />
             </div>
-            <div className="h-full flex-1 min-w-0">
+            {/* <div className="h-full flex-1 min-w-0">
               <MindshareCard />
-            </div>
+            </div> */}
           </div>
         </div>
 
@@ -50,3 +50,6 @@ export function Dashboard() {
     </div>
   )
 }
+
+// Export memoized component to prevent unnecessary re-renders
+export const Dashboard = memo(DashboardComponent)
