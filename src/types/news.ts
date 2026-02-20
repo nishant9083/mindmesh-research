@@ -31,6 +31,7 @@ export interface NewsItem {
   status: string
   createdOn: number
   updatedOn: number | null
+  aiSummary: string
   sourceData: {
     NAME: string
   }
@@ -46,6 +47,59 @@ export interface RawNewsCategory {
 export interface RawNewsResponse {
   Data: NewsItem[]
   Err: Record<string, unknown>
+}
+
+export interface ResearchItem {
+  id: string
+  title: string
+  description?: string
+  url: string
+  source: string
+  author?: string
+  publishedAt?: string
+  content?: string
+  aiSummary?: string
+  imageUrl?: string
+  tags?: string
+  isSummarized: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Daily Recap Types
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Source reference for a daily recap bullet point
+ */
+export interface DailyRecapSource {
+  id: string
+  title: string
+  url: string
+  sourceName: string
+}
+
+/**
+ * A single bullet point in the daily recap
+ */
+export interface DailyRecapBullet {
+  text: string
+  sources: DailyRecapSource[]
+}
+
+/**
+ * Daily Recap item - AI-generated summary of the day's news
+ */
+export interface DailyRecap {
+  id: string
+  title: string
+  date: string                    // ISO date string (e.g., "2026-02-19")
+  recapDate: string             // Formatted display date (e.g., "Today, Feb 19")
+  summary: string               // Full AI-generated summary text
+  bullets: DailyRecapBullet[]     // Structured bullet points with sources
+  updatedAt: string               // Last updated timestamp
+  createdAt: string               // Creation timestamp
 }
 
 export interface RawSource {

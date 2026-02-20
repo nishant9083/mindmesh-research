@@ -10,10 +10,10 @@ import type {
 } from "@/types/news";
 
 const API_BASE = import.meta.env.VITE_API_BASE;
-const BASE_URL = `${API_BASE}/articles/latest`;
-const ARTICLES_URL = `${API_BASE}/articles`;
-const CATEGORIES_URL = `${API_BASE}/categories`;
-const SOURCES_URL = `${API_BASE}/sources`;
+const BASE_URL = `${API_BASE}/news/articles/latest`;
+const ARTICLES_URL = `${API_BASE}/news/articles`;
+const CATEGORIES_URL = `${API_BASE}/news/categories`;
+const SOURCES_URL = `${API_BASE}/news/sources`;
 
 // Raw shape as returned by the API (SCREAMING_SNAKE keys).
 
@@ -53,6 +53,7 @@ function mapNewsItem(raw: NewsItem): NewsItem {
     score: raw.score,
     sentiment: raw.sentiment,
     status: raw.status,
+    aiSummary: raw.aiSummary,
     createdOn: raw.createdOn,
     sourceData: raw.sourceData,
     updatedOn: raw.updatedOn,

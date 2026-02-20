@@ -8,4 +8,8 @@
  * - Domain-specific interfaces
  */
 
-export * from "./news";
+export * from "./news"
+export * from "./coin-detail"
+export * from "./chart"
+export * from "./search"
+export * from "./trending"

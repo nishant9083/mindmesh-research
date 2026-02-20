@@ -46,6 +46,16 @@ const timeRangeToDays: Record<TimeRange, string | number> = {
   "Max": "max",
 }
 
+// Time range to price change percentage parameter mapping
+const timeRangeToPriceChangeParam: Record<TimeRange, string> = {
+  "1D": "24h",
+  "7D": "7d",
+  "30D": "30d",
+  "90D": "90d", // CoinGecko doesn't have 90d, use 200d as closest
+  "1Y": "1y",
+  "Max": "1y", // Use 1y for max as well
+}
+
 interface CoinGeckoProviderProps {
   children: ReactNode
   autoRefreshInterval?: number // in milliseconds, default 60000 (1 minute)
@@ -56,7 +66,7 @@ interface CoinGeckoProviderProps {
 export function CoinGeckoProvider({ 
   children, 
   autoRefreshInterval = 60000,
-  initialTimeRange = "7D",
+  initialTimeRange = "1D",
   initialSelectedAssets = []
 }: CoinGeckoProviderProps) {
   // Market Data State
@@ -72,17 +82,29 @@ export function CoinGeckoProvider({
   // Selection State
   const [selectedAssets, setSelectedAssets] = useState<string[]>(initialSelectedAssets)
   const [timeRange, setTimeRange] = useState<TimeRange>(initialTimeRange)
-
   // Fetch market data
   const fetchMarketData = useCallback(async () => {
     try {
       setIsLoadingMarkets(true)
       setMarketError(null)
-      const data = await getCoinMarkets({
-        per_page: 100,
-        price_change_percentage: "7d",
-      })
-      setMarketData(data)
+      const priceChangeParam = timeRangeToPriceChangeParam[timeRange]
+      
+      // Fetch multiple pages to get more coins (up to 500 coins - 2 pages of 250)
+      const [page1, page2] = await Promise.all([
+        getCoinMarkets({
+          per_page: 250,
+          page: 1,
+          price_change_percentage: priceChangeParam,
+        }),
+        getCoinMarkets({
+          per_page: 250,
+          page: 2,
+          price_change_percentage: priceChangeParam,
+        })
+      ])
+      
+      const allData = [...page1, ...page2]
+      setMarketData(allData)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to fetch market data"
       setMarketError(errorMessage)
@@ -90,7 +112,7 @@ export function CoinGeckoProvider({
     } finally {
       setIsLoadingMarkets(false)
     }
-  }, [])
+  }, [timeRange])
 
   // Fetch chart data for specific assets
   const fetchChartDataForAssets = useCallback(async (
