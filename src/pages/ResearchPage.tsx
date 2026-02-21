@@ -1,21 +1,13 @@
+import { NewsDetailPanel } from "@/components"
+import { getTrendingSearch } from "@/services/coingecko-api"
+import { fetchNews } from "@/services/news-api"
+import { fetchResearchArticles } from "@/services/research-api"
+import type { TrendingResponse } from "@/types"
+import type { NewsItem, ResearchItem } from "@/types/news"
+import { ArrowUpRight, ChevronDown, ChevronRight } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { fetchResearchArticles } from "@/services/research-api"
-import { fetchNews } from "@/services/news-api"
-import type { ResearchItem, NewsItem } from "@/types/news"
-import { ArrowUpRight, ChevronDown, ChevronRight } from "lucide-react"
-import { NewsDetailPanel } from "@/components"
-import type { TrendingResponse } from "@/types"
-import { getTrendingSearch } from "@/services/coingecko-api"
 
-// Dummy spotlight data
-const spotlightData = {
-    category: "DeAI",
-    date: "Dec 2, 2025",
-    title: "State of AI",
-    author: "Messari",
-    imageUrl: "/api/placeholder/400/300" // You can replace with actual image
-}
 
 
 export function ResearchPage() {

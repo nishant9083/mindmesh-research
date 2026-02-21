@@ -53,7 +53,7 @@ export function PerformanceMetrics({ marketData, currency }: PerformanceMetricsP
           </div>
           
           {/* Visual Range Bar */}
-          <div className="relative h-2 bg-gradient-to-r from-red-600 via-yellow-600 to-green-600 rounded-full overflow-hidden">
+          <div className="relative h-2 bg-linear-to-r from-red-600 via-yellow-600 to-green-600 rounded-full overflow-hidden">
             <div 
               className="absolute top-0 h-full w-0.5 bg-white shadow-lg"
               style={{ left: `${Math.min(Math.max(pricePosition, 0), 100)}%` }}
