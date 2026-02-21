@@ -9,12 +9,14 @@ import { fetchLatestNews, fetchNews, fetchCategories, fetchSources } from "@/ser
 import { MultiSelectDropdown } from "./MultiSelectDropdown"
 import { NewsItemRow } from "./NewsItemRow"
 import { LoadingState, EmptyState } from "./StateIndicators"
+import { useNavigate } from "react-router-dom"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Main Component
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function NewsCard({ onNewsClick }: NewsCardProps) {
+  const navigate = useNavigate()
   // Data state
   const [newsData, setNewsData] = useState<NewsItem[]>([])
   const [allCategories, setAllCategories] = useState<RawNewsCategory[]>([])
@@ -175,7 +177,7 @@ export function NewsCard({ onNewsClick }: NewsCardProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <CardTitle className="text-white text-base font-medium">News</CardTitle>
-            <ExternalLink className="h-3.5 w-3.5 text-gray-500" />
+            <ExternalLink onClick={()=>navigate('/news')} className="cursor-pointer h-3.5 w-3.5 text-gray-500" />
           </div>
           
           {/* Icon Button Group */}

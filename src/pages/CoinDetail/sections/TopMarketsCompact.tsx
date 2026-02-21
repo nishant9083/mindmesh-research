@@ -111,13 +111,13 @@ export function TopMarketsCompact({ tickers, isLoading, coinSymbol }: TopMarkets
       </div>
 
       {/* View All */}
-      {!isLoading && topTickers.length > 0 && (
+      {/* {!isLoading && topTickers.length > 0 && (
         <div className="px-4 py-2 border-t border-gray-800">
           <button className="text-xs text-blue-500 hover:text-blue-400 font-medium">
             View All Markets →
           </button>
         </div>
-      )}
+      )} */}
     </div>
   )
 }

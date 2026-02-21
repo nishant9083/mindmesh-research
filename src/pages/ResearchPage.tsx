@@ -75,9 +75,9 @@ export function ResearchPage() {
                 </div>
 
                 {/* Four Column Section */}
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-12">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
                     {/* Research Spotlight */}
-                    <div className="space-y-4">
+                    {/* <div className="space-y-4">
                         <div className="flex items-center justify-between mb-3">
                             <h2 className="text-lg font-semibold text-white flex items-center gap-2">
                                 <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -96,7 +96,7 @@ export function ResearchPage() {
                         </div>
 
                         <div className="bg-[#0f1118] border border-[#1e2738] rounded-lg overflow-hidden cursor-pointer hover:border-[#2a3548] transition-colors">
-                            {/* Image placeholder with blue gradient pattern */}
+                            
                             <div className="h-64 bg-linear-to-br from-blue-600 via-blue-800 to-blue-900 flex items-center justify-center relative overflow-hidden">
                                 <div className="absolute inset-0 opacity-20">
                                     <div className="absolute top-0 left-0 w-32 h-32 bg-white/10 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
@@ -120,7 +120,7 @@ export function ResearchPage() {
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> */}
 
                     {/* Latest Reports - Spans 2 columns */}
                     <div className="space-y-4 lg:col-span-2">
@@ -143,11 +143,11 @@ export function ResearchPage() {
                                         onClick={() => navigate(`/research/${report.id}`)}
                                         className="flex items-center gap-3 p-2 bg-[#181b28] hover:bg-[#1a2332] rounded border border-[#1e2738] cursor-pointer transition-colors"
                                     >
-                                        <div className="w-32 h-full bg-[#1a2332] rounded overflow-hidden shrink-0">
+                                        <div className="w-32 h-20 bg-[#1a2332] rounded overflow-hidden shrink-0">
                                             <img
                                                 src={report.imageUrl || `${placeholder}/300x200?text=Crypto`}
                                                 alt={report.title}
-                                                className="w-full h-full object-cover"
+                                                className=" object-contain"
                                             />
                                         </div>
                                         <div className="flex flex-col py-1 justify-between h-full flex-1">

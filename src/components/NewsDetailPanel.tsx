@@ -154,7 +154,31 @@ export function NewsDetailPanel({ selectedNews, onClose }: NewsDetailPanelProps)
               </ul>
             ) : (
               <p className="text-sm leading-relaxed text-gray-300 whitespace-pre-line">
-                {selectedNews.body}
+                {selectedNews.body
+                  .split(/\n\n+/)
+                  .filter((para: string) => para.trim().length > 0)
+                  .length > 1
+                  ? selectedNews.body
+                    .split(/\n\n+/)
+                    .filter((para: string) => para.trim().length > 0)
+                    .map((para: string, idx: number) => (
+                      <p key={idx}>{para.trim()}</p>
+                    ))
+                  : (() => {
+                    const sentences = selectedNews.body.match(/[^.!?]+[.!?]+/g) || [selectedNews.body]
+                    const totalSentences = sentences.length
+                    const parasCount = Math.min(4, Math.max(1, Math.ceil(totalSentences / 2)))
+                    const sentencesPerPara = Math.ceil(totalSentences / parasCount)
+                    const paragraphs: string[] = []
+                    for (let i = 0; i < totalSentences; i += sentencesPerPara) {
+                      paragraphs.push(
+                        sentences.slice(i, i + sentencesPerPara).join(" ").trim()
+                      )
+                    }
+                    return paragraphs.map((para, idx) => (
+                      <p key={idx}>{para}</p>
+                    ))
+                  })()}
               </p>
             )}
           </div>
