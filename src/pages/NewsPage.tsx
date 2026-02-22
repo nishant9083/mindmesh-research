@@ -115,7 +115,7 @@ export function NewsPage() {
 
   return (
     <div className="h-full overflow-y-auto bg-[#060709]">
-      <div className="max-w-400 mx-auto px-6 py-8">
+      <div className="max-w-400 mx-auto px-6 py-4">
         {/* Daily Recaps Section */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">

@@ -16,7 +16,7 @@ export function PlaceholderCard({
 }: PlaceholderCardProps) {
   return (
     <Card className={`bg-[#0f1118] border-[#1e2738] h-full py-0 flex flex-col ${className} gap-0`}>
-      <CardHeader className="pb-2 pt-4 px-4 border-[#1e2738] bg-[#181b28] shrink-0 rounded-t-xl">
+      <CardHeader className="py-2 px-4 border-[#1e2738] bg-[#181b28] shrink-0 rounded-t-xl">
         <div className="flex items-center gap-2">
           <CardTitle className="text-white text-base font-medium">{title}</CardTitle>
           {showExternalLink && <ExternalLink className="h-3.5 w-3.5 text-gray-500" />}

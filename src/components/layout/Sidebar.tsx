@@ -32,7 +32,7 @@ export function Sidebar() {
   const activePage = getActivePage()
 
   return (
-    <aside className="w-16 bg-[#0a0d14] border-r border-[#1e2738] flex flex-col items-center py-4 shrink-0">
+    <aside className="w-12 bg-[#0a0d14] border-r border-[#1e2738] flex flex-col items-center py-4 shrink-0">
       {/* Navigation */}
       <nav className="flex flex-col items-center gap-2 flex-1">
         {navItems.map((item) => {
@@ -45,7 +45,7 @@ export function Sidebar() {
                 onClick={() => navigate(item.path)}
                 onMouseEnter={() => setHoveredItem(item.id)}
                 onMouseLeave={() => setHoveredItem(null)}
-                className={`w-11 h-11 rounded-lg flex items-center justify-center transition-all ${
+                className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all ${
                   isActive
                     ? "bg-[#c2cce7] text-black border"
                     : "text-gray-500 hover:text-white hover:bg-[#1a2332]"

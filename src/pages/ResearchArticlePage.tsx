@@ -1,8 +1,95 @@
-import { useEffect, useState } from "react"
-import { useParams, useNavigate } from "react-router-dom"
 import { fetchResearchArticleById } from "@/services/research-api"
 import type { ResearchItem } from "@/types/news"
-// import ReactMarkdown from "react-markdown"
+import { ArrowLeftIcon } from "lucide-react"
+import { useEffect, useState } from "react"
+import type { Components } from "react-markdown"
+import ReactMarkdown from "react-markdown"
+import { useNavigate, useParams } from "react-router-dom"
+import remarkGfm from "remark-gfm"
+
+// Markdown component map for rich, blog-quality rendering
+const mdComponents: Components = {
+  h1: ({ children }) => (
+    <h1 className="text-xl md:text-2xl font-bold text-white mt-8 mb-4 leading-tight tracking-tight">
+      {children}
+    </h1>
+  ),
+  h2: ({ children }) => (
+    <h2 className="text-lg md:text-xl font-bold text-white mt-6 mb-3 leading-snug border-b border-white/10 pb-2">
+      {children}
+    </h2>
+  ),
+  h3: ({ children }) => (
+    <h3 className="text-base md:text-lg font-semibold text-white/90 mt-5 mb-2 leading-snug">
+      {children}
+    </h3>
+  ),
+  h4: ({ children }) => (
+    <h4 className="text-sm md:text-base font-semibold text-white/80 mt-4 mb-2">{children}</h4>
+  ),
+  p: ({ children }) => (
+    <p className="text-gray-300 leading-[1.85] text-sm md:text-base mb-4">{children}</p>
+  ),
+  a: ({ href, children }) => (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-blue-400 underline underline-offset-2 decoration-blue-400/40 hover:text-blue-300 hover:decoration-blue-300/60 transition-colors"
+    >
+      {children}
+    </a>
+  ),
+  blockquote: ({ children }) => (
+    <blockquote className="my-4 pl-4 border-l-4 border-blue-500/60 bg-blue-500/5 rounded-r-lg py-2 pr-3 italic text-gray-400 text-sm">
+      {children}
+    </blockquote>
+  ),
+  code: ({ children, className }) => {
+    const isBlock = className?.includes("language-")
+    return isBlock ? (
+      <code className="block bg-[#0d1117] border border-white/10 rounded-lg p-3 text-xs text-green-300 font-mono overflow-x-auto my-4 leading-relaxed">
+        {children}
+      </code>
+    ) : (
+      <code className="bg-white/10 text-blue-300 font-mono text-[0.8em] px-1.5 py-0.5 rounded">
+        {children}
+      </code>
+    )
+  },
+  pre: ({ children }) => (
+    <pre className="bg-[#0d1117] border border-white/10 rounded-lg p-3 overflow-x-auto my-4 text-xs font-mono leading-relaxed">
+      {children}
+    </pre>
+  ),
+  hr: () => <hr className="my-6 border-white/10" />,
+  strong: ({ children }) => (
+    <strong className="font-semibold text-white">{children}</strong>
+  ),
+  em: ({ children }) => (
+    <em className="italic text-gray-300">{children}</em>
+  ),
+  table: ({ children }) => (
+    <div className="overflow-x-auto my-4">
+      <table className="w-full text-xs border-collapse border border-white/10 rounded-lg overflow-hidden">
+        {children}
+      </table>
+    </div>
+  ),
+  thead: ({ children }) => (
+    <thead className="bg-white/5 text-white font-semibold">{children}</thead>
+  ),
+  tbody: ({ children }) => (
+    <tbody className="divide-y divide-white/5">{children}</tbody>
+  ),
+  tr: ({ children }) => <tr className="hover:bg-white/3 transition-colors">{children}</tr>,
+  th: ({ children }) => (
+    <th className="px-3 py-2 text-left text-gray-200 border-b border-white/10">{children}</th>
+  ),
+  td: ({ children }) => (
+    <td className="px-3 py-2 text-gray-400">{children}</td>
+  ),
+}
 
 export function ResearchArticlePage() {
   const { id } = useParams<{ id: string }>()
@@ -65,16 +152,16 @@ export function ResearchArticlePage() {
       {/* Gradient Background */}
       <div className="absolute inset-0 bg-linear-to-br from-blue-400/20 via-transparent to-transparent pointer-events-none"></div>
 
-      <div className="max-w-4xl mx-auto px-6 py-8 relative z-10">
+      <div className="max-w-4xl mx-auto px-6 py-4 relative z-10">
         {/* Header Section */}
         <div className="mb-8">
           {/* Breadcrumb/Tags */}
           <div className="flex items-center gap-3 mb-6">
             <button
               onClick={() => navigate("/")}
-              className="text-blue-200 hover:text-blue-400 text-sm pr-3"
+              className="flex gap-2 items-center text-blue-200 hover:text-blue-400 text-sm pr-3"
             >
-              ← Back
+              <ArrowLeftIcon className="w-4 h-4" /> Back
             </button>
             {Array.isArray(article.tags) && article.tags.length > 0 && article.tags.map((tag, idx) => (
               <span
@@ -87,13 +174,13 @@ export function ResearchArticlePage() {
           </div>
 
           {/* Title */}
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">
+          <h1 className="text-2xl md:text-2xl lg:text-3xl font-bold text-white mb-6 leading-tight">
             {article.title}
           </h1>
 
           {/* Author Info */}
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-[#1a2332] flex items-center justify-center text-white font-semibold">
+            <div className="w-10 h-10 rounded-full bg-[#1a2332] flex items-center justify-center text-white font-semibold">
               {authorName.charAt(0).toUpperCase()}
             </div>
             <div className="flex-1">
@@ -132,47 +219,28 @@ export function ResearchArticlePage() {
 
         {/* AI Summary Section */}
         {article.aiSummary && (
-          <div className="mb-8 bg-[#0d1117] border border-blue-500/30 rounded-lg p-6">
+          <div className="mb-8 prose prose-invert max-w-none bg-[#0d1117] border border-blue-500/30 rounded-lg p-6">
             <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
               <span className="text-blue-400">✨</span> AI Summary
             </h2>
-            <div className="text-gray-300 leading-relaxed space-y-4">
-              {article.aiSummary
-                .split(/\n\n+/)
-                .filter((para: string) => para.trim().length > 0)
-                .length > 1
-                ? article.aiSummary
-                  .split(/\n\n+/)
-                  .filter((para: string) => para.trim().length > 0)
-                  .map((para: string, idx: number) => (
-                    <p key={idx}>{para.trim()}</p>
-                  ))
-                : (() => {
-                  const sentences = article.aiSummary.match(/[^.!?]+[.!?]+/g) || [article.aiSummary]
-                  const totalSentences = sentences.length
-                  const parasCount = Math.min(4, Math.max(1, Math.ceil(totalSentences / 2)))
-                  const sentencesPerPara = Math.ceil(totalSentences / parasCount)
-                  const paragraphs: string[] = []
-                  for (let i = 0; i < totalSentences; i += sentencesPerPara) {
-                    paragraphs.push(
-                      sentences.slice(i, i + sentencesPerPara).join(" ").trim()
-                    )
-                  }
-                  return paragraphs.map((para, idx) => (
-                    <p key={idx}>{para}</p>
-                  ))
-                })()
-              }
+            <div className="text-gray-400 leading-relaxed space-y-4 font-serif">
+              <ReactMarkdown
+              components={mdComponents}
+              remarkPlugins={[remarkGfm]}
+              >{article.aiSummary}</ReactMarkdown>
             </div>
           </div>
         )}
 
         {/* Content Section */}
         {article.content && (
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-white mb-4">Content</h2>
-            <div className="text-gray-300 leading-relaxed space-y-4">
-              <p>{article.content}</p>
+          <div className="mb-8 prose prose-invert max-w-none ">
+            {/* <h2 className="text-2xl font-bold text-white mb-4">Content</h2> */}
+            <div className="text-gray-400 leading-relaxed space-y-4 font-serif">
+              <ReactMarkdown
+              components={mdComponents}
+              remarkPlugins={[remarkGfm]}
+              >{article.content}</ReactMarkdown>
             </div>
             {/* <ReactMarkdown>{article.content}</ReactMarkdown> */}
           </div>
@@ -182,7 +250,7 @@ export function ResearchArticlePage() {
         {article.description && !article.content && (
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-white mb-4">Overview</h2>
-            <div className="text-gray-300 leading-relaxed space-y-4">
+            <div className="text-gray-400 leading-relaxed space-y-4">
               <p>{article.description}</p>
             </div>
           </div>

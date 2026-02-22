@@ -56,11 +56,14 @@ export function ResearchCard() {
         </div>
       ) : (
         <div className="space-y-3 overflow-y-auto h-full no-scrollbar">
-          {researchItems
+          {researchItems.length > 0 ? (researchItems
             .filter(item => item.source === "medium")
             .map((item, index) => (
               <ResearchItemCard key={index} item={item} />
-            ))}
+            ))) :
+            <div className="flex items-center justify-center h-full">
+              <p className="text-gray-500 text-sm">No research articles available.</p>
+            </div>}
         </div>
       )}
     </PlaceholderCard>

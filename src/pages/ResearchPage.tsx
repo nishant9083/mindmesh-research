@@ -60,14 +60,14 @@ export function ResearchPage() {
 
     return (
         <div className="h-full overflow-y-auto bg-[#060709]">
-            <div className="mx-auto px-8 py-8">
+            <div className="mx-auto px-4 py-2">
                 {/* Header */}
-                <div className="mb-8 pb-4 border-b-2 border-gray-900">
+                <div className="pb-4 border-b-2 border-gray-900">
                     <h2 className="text-3xl font-bold text-white">Research</h2>
                 </div>
 
                 {/* Four Column Section */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+                <div className="grid grid-cols-1 lg:grid-cols-3 py-2 gap-6">
                     {/* Research Spotlight */}
                     {/* <div className="space-y-4">
                         <div className="flex items-center justify-between mb-3">

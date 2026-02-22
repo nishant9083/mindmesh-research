@@ -5,7 +5,7 @@ import {
   formatPercentage,
 } from "@/lib/format"
 import { cn } from "@/lib/utils"
-import { Bell, Eye, ExternalLink } from "lucide-react"
+import { ExternalLink } from "lucide-react"
 
 interface CompactCoinHeaderProps {
   coin: CoinDetail
@@ -105,7 +105,7 @@ export function CompactCoinHeader({
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center justify-end gap-2">
+        {/* <div className="flex items-center justify-end gap-2">
 
           <button
             className="px-3 py-1.5 rounded-md bg-gray-800 hover:bg-gray-700 text-white transition"
@@ -120,7 +120,7 @@ export function CompactCoinHeader({
           >
             <Eye className="h-4 w-4" />
           </button>
-        </div>
+        </div> */}
       </div>
 
       {/* Bottom Row: Stats */}
